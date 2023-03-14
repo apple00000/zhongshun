@@ -23,6 +23,7 @@ import android.os.HandlerThread;
 import android.util.Log;
 import android.util.Size;
 import android.util.SparseArray;
+import android.view.MenuItem;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
@@ -46,6 +47,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+
+import com.zhapplication.utils.Camera;
 
 public class CameraActivity extends AppCompatActivity {
     private TextureView textureView;
@@ -74,12 +77,27 @@ public class CameraActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // 左上角返回箭头
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         setContentView(R.layout.activity_camera);
         textureView = findViewById(R.id.textureView);
         btn_photo = findViewById(R.id.btn_photo);
         btn_photo.setOnClickListener(OnClick);
     }
 
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                break;
+        }
+        return true;
+    }
+
+    // 拍照
     private final View.OnClickListener OnClick = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -171,7 +189,7 @@ public class CameraActivity extends AppCompatActivity {
                 }
                 StreamConfigurationMap map = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
                 if (map != null) { //找到摄像头能够输出的，最符合我们当前屏幕能显示的最小分辨率
-                    previewSize = getOptimalSize(map.getOutputSizes(SurfaceTexture.class), width, height);
+                    previewSize = Camera.getOptimalSize(map.getOutputSizes(SurfaceTexture.class), width, height);
                     mCaptureSize = Collections.max(Arrays.asList(map.getOutputSizes(ImageFormat.JPEG)), new Comparator<Size>() {
                         @Override
                         public int compare(Size o1, Size o2) {
@@ -179,7 +197,6 @@ public class CameraActivity extends AppCompatActivity {
                         }
                     });
                 }
-                //建立ImageReader准备存储照片
                 setUpImageReader();
                 mCameraId = cameraId;
                 break;
@@ -200,7 +217,7 @@ public class CameraActivity extends AppCompatActivity {
         }, mCameraHandler);
     }
 
-    //存储图片的过程
+    // 存图片
     private class ImageSaver implements Runnable {
         private Image image;
 
@@ -241,36 +258,6 @@ public class CameraActivity extends AppCompatActivity {
         }
     }
 
-    //得到最佳的预览尺寸
-    private Size getOptimalSize(Size[] sizes, int w, int h) {
-        final double ASPECT_TOLERANCE = 0.1;
-        double targetRatio = (double) w / h;
-        if (sizes == null) return null;
-        Size optimalSize = null;
-        double minDiff = Double.MAX_VALUE;
-        int targetHeight = h;
-        for (Size size : sizes) {
-            double ratio = (double) size.getWidth() / size.getHeight();
-            if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) continue;
-            if (Math.abs(size.getHeight() - targetHeight) < minDiff) {
-                optimalSize = size;
-                minDiff = Math.abs(size.getHeight() - targetHeight);
-            }
-        }
-
-        if (optimalSize == null) {
-            minDiff = Double.MAX_VALUE;
-            for (Size size : sizes) {
-                if (Math.abs(size.getHeight() - targetHeight) < minDiff) {
-                    optimalSize = size;
-                    minDiff = Math.abs(size.getHeight() - targetHeight);
-                }
-            }
-        }
-
-        return optimalSize;
-    }
-
     private void openCamera() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
@@ -303,7 +290,7 @@ public class CameraActivity extends AppCompatActivity {
         }
     };
 
-    //开始预览
+    // 预览
     private void startPreview() {
         //建立图像缓冲区
         SurfaceTexture surfaceTexture = textureView.getSurfaceTexture();

@@ -21,7 +21,7 @@ import com.zhapplication.R;
 import java.io.File;
 import java.io.IOException;
 
-public class FaceLoginActivity extends AppCompatActivity {
+public class FaceInputActivity extends AppCompatActivity {
     final int TAKE_PHOTO=1;
     ImageView iv_photo;
     Uri imageUri;
@@ -50,7 +50,7 @@ public class FaceLoginActivity extends AppCompatActivity {
                 }
                 if (Build.VERSION.SDK_INT>=24){
 //图片的保存路径
-                    imageUri= FileProvider.getUriForFile(FaceLoginActivity.this,"com.zhapplication", output);
+                    imageUri= FileProvider.getUriForFile(FaceInputActivity.this,"com.zhapplication", output);
                 }
                 else { imageUri=Uri.fromFile(output);}
                 //跳转界面到系统自带的拍照界面

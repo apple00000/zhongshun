@@ -21,7 +21,7 @@
 
 
         <activity
-            android:name=".activity.FaceLoginActivity"
+            android:name=".activity.FaceInputActivity"
             android:exported="false"
             android:label="人脸录入" />
 

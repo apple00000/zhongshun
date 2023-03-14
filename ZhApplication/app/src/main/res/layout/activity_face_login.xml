@@ -5,7 +5,7 @@
 
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.zhapplication.activity.FaceLoginActivity"
+    tools:context="com.zhapplication.activity.FaceInputActivity"
     android:orientation="horizontal">
 
     <Button
