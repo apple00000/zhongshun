@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.example.zhapplication">
+    package="com.zhapplication">
 
     <application
         android:allowBackup="true"
@@ -18,11 +18,11 @@
             android:resource="@xml/file_paths" />
 
         <activity
-            android:name=".FaceLoginActivity"
+            android:name="com.zhapplication.FaceLoginActivity"
             android:exported="false"
             android:label="人脸录入" />
         <activity
-            android:name=".MainActivity"
+            android:name="com.zhapplication.MainActivity"
             android:exported="true"
             android:label="叉车监控系统">
             <intent-filter>
@@ -34,7 +34,7 @@
 
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.example.zhapplication"
+            android:authorities="com.zhapplication"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
@@ -42,5 +42,9 @@
                 android:resource="@xml/file_paths" />
         </provider>
     </application>
+
+    <!-- 存储空间读写权限 -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
 </manifest>

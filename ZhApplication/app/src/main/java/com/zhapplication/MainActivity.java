@@ -1,4 +1,4 @@
-package com.example.zhapplication;
+package com.zhapplication;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+
+import com.zhapplication.R;
 
 public class MainActivity extends AppCompatActivity {
 
