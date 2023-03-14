@@ -5,7 +5,8 @@
 
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.zhapplication.FaceLoginActivity">
+    tools:context="com.zhapplication.activity.FaceLoginActivity"
+    android:orientation="horizontal">
 
     <Button
         android:layout_width="match_parent"

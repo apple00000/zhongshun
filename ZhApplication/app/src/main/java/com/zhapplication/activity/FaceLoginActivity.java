@@ -1,4 +1,4 @@
-package com.zhapplication;
+package com.zhapplication.activity;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
