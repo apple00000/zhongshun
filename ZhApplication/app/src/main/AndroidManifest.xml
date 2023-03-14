@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.zhapplication">
+    package="com.zhapplication" >
+
+    <!-- 权限 -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
@@ -12,19 +17,18 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.ZhApplication"
-        tools:targetApi="31">
-        <meta-data
-            android:name="com.google.android.actions"
-            android:resource="@xml/file_paths" />
+        tools:targetApi="31" >
+
 
         <activity
-            android:name="com.zhapplication.activity.FaceLoginActivity"
+            android:name=".activity.FaceLoginActivity"
             android:exported="false"
             android:label="人脸录入" />
+
         <activity
-            android:name="com.zhapplication.activity.MainActivity"
+            android:name=".activity.MainActivity"
             android:exported="true"
-            android:label="叉车监控系统">
+            android:label="叉车监控系统" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -32,19 +36,20 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".activity.CameraActivity"
+            android:exported="false"
+            android:label="相机" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="com.zhapplication"
             android:exported="false"
-            android:grantUriPermissions="true">
+            android:grantUriPermissions="true" >
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
     </application>
-
-    <!-- 存储空间读写权限 -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
 </manifest>

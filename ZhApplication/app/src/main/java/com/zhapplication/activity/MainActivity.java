@@ -28,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
         switch(item.getItemId()){
             // 人脸录入
             case R.id.face_login:
-                Intent intent = new Intent(MainActivity.this, FaceLoginActivity.class);
+                Intent intent = new Intent(MainActivity.this, CameraActivity.class);
                 startActivity(intent);
         }
         return true;
