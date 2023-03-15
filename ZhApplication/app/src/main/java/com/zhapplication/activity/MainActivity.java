@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 
 import com.zhapplication.R;
 
@@ -15,6 +17,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Button btn_login = findViewById(R.id.btn_login);
+        btn_login.setOnClickListener(new btnLoginOnClickListener());
     }
 
     @Override
@@ -28,9 +33,18 @@ public class MainActivity extends AppCompatActivity {
         switch(item.getItemId()){
             // 人脸录入
             case R.id.face_login:
-                Intent intent = new Intent(MainActivity.this, CameraActivity.class);
+                Intent intent = new Intent(MainActivity.this, FaceInputActivity.class);
                 startActivity(intent);
         }
         return true;
+    }
+
+    // 登录按钮
+    class btnLoginOnClickListener implements View.OnClickListener {
+        @Override
+        public void onClick(View v) {
+            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+            startActivity(intent);
+        }
     }
 }

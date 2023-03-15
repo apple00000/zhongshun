@@ -20,10 +20,10 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.util.Log;
 import android.util.Size;
 import android.util.SparseArray;
 import android.view.MenuItem;
+import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
@@ -35,22 +35,19 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.zhapplication.R;
-import android.view.Surface;
+import com.zhapplication.utils.Camera;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 
-import com.zhapplication.utils.Camera;
-
-public class CameraActivity extends AppCompatActivity {
+public class LoginActivity extends AppCompatActivity {
     private TextureView textureView;
     private HandlerThread handlerThread;
     private Handler mCameraHandler;
@@ -81,10 +78,8 @@ public class CameraActivity extends AppCompatActivity {
         // 左上角返回箭头
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        setContentView(R.layout.activity_camera);
-        textureView = findViewById(R.id.textureView);
-        btn_photo = findViewById(R.id.btn_photo);
-        btn_photo.setOnClickListener(OnClick);
+        setContentView(R.layout.activity_login);
+        textureView = findViewById(R.id.textureView_Login);
     }
 
     @Override
@@ -95,46 +90,6 @@ public class CameraActivity extends AppCompatActivity {
                 break;
         }
         return true;
-    }
-
-    // 拍照
-    private final View.OnClickListener OnClick = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            //获取摄像头的请求
-            try {
-                CaptureRequest.Builder cameraDeviceCaptureRequest = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
-                cameraDeviceCaptureRequest.addTarget(imageReader.getSurface());
-                //获取摄像头的方向
-                int rotation = getWindowManager().getDefaultDisplay().getRotation();
-                CameraCaptureSession.CaptureCallback mCaptureCallback = new CameraCaptureSession.CaptureCallback() {
-                    @Override
-                    public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
-                        super.onCaptureCompleted(session, request, result);
-                        Toast.makeText(CameraActivity.this, "拍照结束，相片已保存！", Toast.LENGTH_SHORT).show();
-                        unLockFocus();
-                    }
-                };
-                //设置拍照方向
-                cameraDeviceCaptureRequest.set(CaptureRequest.JPEG_ORIENTATION, (Integer) ORIENTATION.get(rotation));
-                mCameraCaptureSession.stopRepeating();
-                mCameraCaptureSession.capture(cameraDeviceCaptureRequest.build(), mCaptureCallback, mCameraHandler);
-            } catch (CameraAccessException e) {
-                e.printStackTrace();
-            }
-            //获取图像的缓冲区
-            //获取文件的存储权限及操作
-        }
-    };
-
-    private void unLockFocus() {
-        captureRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_CANCEL);
-        try {
-            mCameraCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), null, mCameraHandler);
-
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
     }
 
     @Override
@@ -153,9 +108,7 @@ public class CameraActivity extends AppCompatActivity {
         @Override
         public void onSurfaceTextureAvailable(@NonNull SurfaceTexture surface, int width, int height) {
             //SurfaceTexture组件可用的时候,设置相机参数，并打开摄像头
-            //设置摄像头参数
             setUpCamera(width, height);
-            //打开摄像头
             openCamera();
         }
 
@@ -208,54 +161,13 @@ public class CameraActivity extends AppCompatActivity {
 
     private void setUpImageReader() {
         imageReader = ImageReader.newInstance(mCaptureSize.getWidth(), mCaptureSize.getHeight(), ImageFormat.JPEG, 2);
-        imageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
-            @Override
-            public void onImageAvailable(ImageReader reader) {
-                mCameraHandler.post(new ImageSaver(reader.acquireNextImage()));
-            }
-
-        }, mCameraHandler);
-    }
-
-    // 存图片
-    private class ImageSaver implements Runnable {
-        private Image image;
-
-        public ImageSaver(Image image) {
-            this.image = image;
-        }
-
-        @Override
-        public void run() {
-            ByteBuffer byteBuffer = image.getPlanes()[0].getBuffer();
-            byte[] data = new byte[byteBuffer.remaining()];
-            byteBuffer.get(data);
-//            String path =getFilesDir();
-            String path = Environment.getExternalStorageDirectory() + "/DCIM/CameraV2/";
-            File file = new File(path);
-            //判断当前的文件目录是否存在，如果不存在就创建这个文件目录
-            if (!file.exists()) {
-                file.mkdir();
-            }
-            String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-            String fileName = "IMG_" + timeStamp + ".jpg";
-            FileOutputStream fileOutputStream = null;
-            try {
-                fileOutputStream = new FileOutputStream(fileName);
-                fileOutputStream.write(data, 0, data.length);
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                if (fileOutputStream != null) {
-                    try {
-                        fileOutputStream.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
+//        imageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
+//            @Override
+//            public void onImageAvailable(ImageReader reader) {
+//                mCameraHandler.post(new Camera.ImageSaver(reader.acquireNextImage()));
+//            }
+//
+//        }, mCameraHandler);
     }
 
     private void openCamera() {
