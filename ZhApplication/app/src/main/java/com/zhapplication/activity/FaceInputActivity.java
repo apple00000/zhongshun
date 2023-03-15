@@ -3,7 +3,13 @@ package com.zhapplication.activity;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.ImageFormat;
+import android.graphics.Paint;
+import android.graphics.PointF;
+import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -14,18 +20,23 @@ import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.media.FaceDetector;
 import android.media.Image;
 import android.media.ImageReader;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.util.Log;
 import android.util.Size;
 import android.util.SparseArray;
 import android.view.MenuItem;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -46,10 +57,13 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 
+import com.zhapplication.utils.AutoFitTextureView;
 import com.zhapplication.utils.Camera;
+import com.zhapplication.utils.DrawView;
 
 public class FaceInputActivity extends AppCompatActivity {
-    private TextureView textureView;
+    private AutoFitTextureView textureView;
+    private ImageView imageView;
     private HandlerThread handlerThread;
     private Handler mCameraHandler;
     private CameraManager cameraManager;
@@ -72,6 +86,9 @@ public class FaceInputActivity extends AppCompatActivity {
         ORIENTATION.append(Surface.ROTATION_270, 180);
     }
 
+    private boolean runClassifier = false;
+    private final Object lock = new Object();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -80,7 +97,8 @@ public class FaceInputActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         setContentView(R.layout.activity_face_input);
-        textureView = findViewById(R.id.textureView_faceInput);
+        textureView =  (AutoFitTextureView) findViewById(R.id.textureView_faceInput);
+        imageView = (ImageView) findViewById(R.id.imageView_faceInput);
         btn_photo = findViewById(R.id.btn_photo);
         btn_photo.setOnClickListener(OnClick);
     }
@@ -142,6 +160,8 @@ public class FaceInputActivity extends AppCompatActivity {
         startCameraThread();
         if (!textureView.isAvailable()) {
             textureView.setSurfaceTextureListener(mTextureListener);
+            imageView.getLayoutParams().width = textureView.getWidth();
+            imageView.getLayoutParams().height = textureView.getHeight();
         } else {
             startPreview();
         }
@@ -196,7 +216,8 @@ public class FaceInputActivity extends AppCompatActivity {
                     });
                 }
                 setUpImageReader();
-                mCameraId = cameraId;
+//                mCameraId = cameraId;
+                mCameraId = "1"; // 0后置 1前置
                 break;
             }
         } catch (CameraAccessException e) {
@@ -215,6 +236,65 @@ public class FaceInputActivity extends AppCompatActivity {
         }, mCameraHandler);
     }
 
+    /**
+     * 定期拍照并识别
+     */
+    private Runnable periodicClassify =
+            new Runnable() {
+                @Override
+                public void run() {
+                    synchronized (lock) {
+                        if (runClassifier) {
+                            Bitmap bitmap = textureView.getBitmap(300, 300);
+                              if (bitmap!=null) {
+                                  int numOfFaces;
+                                  Bitmap tmpBmp = bitmap.copy(Bitmap.Config.RGB_565, true);
+                                  FaceDetector mFaceDetector = new FaceDetector(tmpBmp.getWidth(), tmpBmp.getHeight(), 1);
+                                  FaceDetector.Face[] mFace = new FaceDetector.Face[1];
+                                  //获取实际上有多少张脸
+                                  numOfFaces = mFaceDetector.findFaces(tmpBmp, mFace);
+                                  Log.v("xxxx numOfFaces ppp", String.valueOf(numOfFaces));
+
+                                  float eyesDistance = 0f;
+                                  for(int i=0;i<numOfFaces;i++) {
+                                      Bitmap croppedBitmap = Bitmap.createBitmap((int) 300, (int) 300, Bitmap.Config.ARGB_8888);
+                                      final Canvas canvas = new Canvas(croppedBitmap);
+                                      Paint paint = new Paint();
+                                      paint.setColor(Color.GREEN);
+                                      paint.setStyle(Paint.Style.STROKE);
+                                      paint.setStrokeWidth(5.0f);
+                                      paint.setAntiAlias(true);
+                                      canvas.drawRect(10,10,100,100, paint);
+
+                                      Log.v("xxx1", "xxx2");
+                                      imageView.post(new Runnable() {
+                                          @Override
+                                          public void run() {
+                                              Log.v("xxx5", "xxx6");
+                                              imageView.setImageBitmap(croppedBitmap);
+                                          }
+                                      });
+
+//                                      PointF eyeMidPoint = new PointF();
+//                                      mFace[i].getMidPoint(eyeMidPoint);
+//                                      eyesDistance = mFace[i].eyesDistance();
+//
+//                                      canvas.drawRect( (int)(eyeMidPoint.x-eyesDistance),
+//                                                        (int)(eyeMidPoint.y-eyesDistance),
+//                                                        (int)(eyeMidPoint.x+eyesDistance),
+//                                                        (int)(eyeMidPoint.y+eyesDistance),
+//                                                        paint);
+
+                                  }
+                              }else{
+//                                  Log.e("","");
+                              }
+                        }
+                    }
+                    mCameraHandler.post(periodicClassify);
+                }
+            };
+
     private void openCamera() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
@@ -225,6 +305,9 @@ public class FaceInputActivity extends AppCompatActivity {
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
+
+        imageView.getLayoutParams().width = 600;
+        imageView.getLayoutParams().height = 600;
     }
 
     CameraDevice.StateCallback mStateCallback = new CameraDevice.StateCallback() {
@@ -287,5 +370,9 @@ public class FaceInputActivity extends AppCompatActivity {
         handlerThread = new HandlerThread("myHandlerThread");
         handlerThread.start();
         mCameraHandler = new Handler(handlerThread.getLooper());
+        synchronized (lock) {
+            runClassifier = true;
+        }
+        mCameraHandler.post(periodicClassify);
     }
 }

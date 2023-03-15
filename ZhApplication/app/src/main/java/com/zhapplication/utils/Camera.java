@@ -1,8 +1,17 @@
 package com.zhapplication.utils;
 
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.media.Image;
 import android.os.Environment;
+import android.util.AttributeSet;
+import android.util.Log;
 import android.util.Size;
+import android.view.View;
+
+import androidx.annotation.Nullable;
 
 import java.io.File;
 import java.io.FileOutputStream;

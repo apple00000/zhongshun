@@ -3,6 +3,11 @@ package com.zhapplication.activity;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.RectF;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -10,6 +15,7 @@ import android.view.View;
 import android.widget.Button;
 
 import com.zhapplication.R;
+import com.zhapplication.utils.DrawView;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -20,6 +26,22 @@ public class MainActivity extends AppCompatActivity {
 
         Button btn_login = findViewById(R.id.btn_login);
         btn_login.setOnClickListener(new btnLoginOnClickListener());
+
+//        // 创建画布
+//        Bitmap croppedBitmap = Bitmap.createBitmap((int) 600, (int) 600, Bitmap.Config.ARGB_8888);
+//        Canvas canvas = new Canvas(croppedBitmap);
+//
+//        // 创建画笔
+//        Paint paint = new Paint();
+//        paint.setColor(Color.RED);
+//        paint.setStyle(Paint.Style.FILL);
+//
+//        // 画矩形
+//        RectF rect = new RectF(0, 0, 100, 100);
+//        canvas.drawRect(rect, paint);
+
+//        DrawView customView = new DrawView(this);
+//        setContentView(customView);
     }
 
     @Override
