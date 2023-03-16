@@ -64,6 +64,7 @@ public class LoginActivity extends AppCompatActivity {
         ORIENTATION.append(Surface.ROTATION_270, 270);
     }
 
+    
     private boolean runClassifier = false;
     private final Object lock = new Object();
 
