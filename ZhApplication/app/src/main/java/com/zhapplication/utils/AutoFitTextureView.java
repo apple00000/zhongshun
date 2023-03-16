@@ -36,7 +36,6 @@ public class AutoFitTextureView extends TextureView {
             throw new IllegalArgumentException("Size cannot be negative.");
         }
 
-        Log.e("qwer",width+ "   " + height);
         mRatioWidth = width;
         mRatioHeight = height;
         requestLayout();

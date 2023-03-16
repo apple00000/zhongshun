@@ -23,6 +23,7 @@ import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.FaceDetector;
 import android.media.Image;
 import android.media.ImageReader;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -40,6 +41,7 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -167,6 +169,14 @@ public class FaceInputActivity extends AppCompatActivity {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    @Override
+    public void onPause() {
+        closeCamera();
+        stopBackgroundThread();
+        super.onPause();
+    }
+
     TextureView.SurfaceTextureListener mTextureListener = new TextureView.SurfaceTextureListener() {
         @Override
         public void onSurfaceTextureAvailable(@NonNull SurfaceTexture surface, int width, int height) {
@@ -246,49 +256,26 @@ public class FaceInputActivity extends AppCompatActivity {
                     synchronized (lock) {
                         if (runClassifier) {
                             Bitmap bitmap = textureView.getBitmap(300, 300);
-                              if (bitmap!=null) {
-                                  int numOfFaces;
-                                  Bitmap tmpBmp = bitmap.copy(Bitmap.Config.RGB_565, true);
-                                  FaceDetector mFaceDetector = new FaceDetector(tmpBmp.getWidth(), tmpBmp.getHeight(), 1);
-                                  FaceDetector.Face[] mFace = new FaceDetector.Face[1];
-                                  //获取实际上有多少张脸
-                                  numOfFaces = mFaceDetector.findFaces(tmpBmp, mFace);
-                                  Log.v("xxxx numOfFaces ppp", String.valueOf(numOfFaces));
+                            if (bitmap!=null) {
+                                  int[] faceLoc = Camera.getFace(bitmap);
+                                  if (faceLoc!=null){
+                                      Bitmap croppedBitmap = Camera.drawRect(
+                                              faceLoc[0],
+                                              faceLoc[1],
+                                              faceLoc[2],
+                                              faceLoc[3]
+                                      );
 
-                                  float eyesDistance = 0f;
-                                  for(int i=0;i<numOfFaces;i++) {
-                                      Bitmap croppedBitmap = Bitmap.createBitmap((int) 300, (int) 300, Bitmap.Config.ARGB_8888);
-                                      final Canvas canvas = new Canvas(croppedBitmap);
-                                      Paint paint = new Paint();
-                                      paint.setColor(Color.GREEN);
-                                      paint.setStyle(Paint.Style.STROKE);
-                                      paint.setStrokeWidth(5.0f);
-                                      paint.setAntiAlias(true);
-                                      canvas.drawRect(10,10,100,100, paint);
-
-                                      Log.v("xxx1", "xxx2");
                                       imageView.post(new Runnable() {
                                           @Override
                                           public void run() {
-                                              Log.v("xxx5", "xxx6");
                                               imageView.setImageBitmap(croppedBitmap);
                                           }
                                       });
-
-//                                      PointF eyeMidPoint = new PointF();
-//                                      mFace[i].getMidPoint(eyeMidPoint);
-//                                      eyesDistance = mFace[i].eyesDistance();
-//
-//                                      canvas.drawRect( (int)(eyeMidPoint.x-eyesDistance),
-//                                                        (int)(eyeMidPoint.y-eyesDistance),
-//                                                        (int)(eyeMidPoint.x+eyesDistance),
-//                                                        (int)(eyeMidPoint.y+eyesDistance),
-//                                                        paint);
-
                                   }
-                              }else{
-//                                  Log.e("","");
-                              }
+                            }else{
+                                  Log.e("","");
+                            }
                         }
                     }
                     mCameraHandler.post(periodicClassify);
@@ -306,8 +293,30 @@ public class FaceInputActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        imageView.getLayoutParams().width = 600;
-        imageView.getLayoutParams().height = 600;
+        imageView.getLayoutParams().width = textureView.getWidth();
+        imageView.getLayoutParams().height = textureView.getHeight();
+    }
+
+    private void closeCamera() {
+//        try {
+//            cameraOpenCloseLock.acquire();
+            if (null != mCameraCaptureSession) {
+                mCameraCaptureSession.close();
+                mCameraCaptureSession = null;
+            }
+            if (null != cameraDevice) {
+                cameraDevice.close();
+                cameraDevice = null;
+            }
+            if (null != imageReader) {
+                imageReader.close();
+                imageReader = null;
+            }
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException("Interrupted while trying to lock camera closing.", e);
+//        } finally {
+//            cameraOpenCloseLock.release();
+//        }
     }
 
     CameraDevice.StateCallback mStateCallback = new CameraDevice.StateCallback() {
@@ -374,5 +383,20 @@ public class FaceInputActivity extends AppCompatActivity {
             runClassifier = true;
         }
         mCameraHandler.post(periodicClassify);
+    }
+
+    // 停止后台线程
+    private void stopBackgroundThread() {
+        handlerThread.quitSafely();
+        try {
+            handlerThread.join();
+            handlerThread = null;
+            mCameraHandler = null;
+            synchronized (lock) {
+                runClassifier = false;
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }
