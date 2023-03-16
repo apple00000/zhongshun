@@ -3,19 +3,19 @@ package com.zhapplication.activity;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.RectF;
 import android.os.Bundle;
+import android.os.Environment;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 
 import com.zhapplication.R;
-import com.zhapplication.utils.DrawView;
+
+import com.zhapplication.utils.Common;
+
+import java.io.File;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -26,6 +26,8 @@ public class MainActivity extends AppCompatActivity {
 
         Button btn_login = findViewById(R.id.btn_login);
         btn_login.setOnClickListener(new btnLoginOnClickListener());
+
+        Common.FilePath = this.getExternalFilesDir(Environment.DIRECTORY_DCIM).getAbsolutePath() + "/";
     }
 
     @Override

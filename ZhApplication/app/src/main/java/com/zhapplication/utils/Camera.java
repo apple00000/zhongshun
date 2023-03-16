@@ -1,5 +1,8 @@
 package com.zhapplication.utils;
 
+import android.app.Activity;
+import android.app.Fragment;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -7,9 +10,12 @@ import android.graphics.Paint;
 import android.graphics.PointF;
 import android.media.FaceDetector;
 import android.media.Image;
+import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
 import android.util.Size;
+
+import androidx.core.content.ContextCompat;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -59,23 +65,26 @@ public class Camera {
 
         @Override
         public void run() {
+            String path;
+
             ByteBuffer byteBuffer = image.getPlanes()[0].getBuffer();
             byte[] data = new byte[byteBuffer.remaining()];
             byteBuffer.get(data);
-            String path = Environment.getExternalStorageDirectory() + "/DCIM/CameraV2/";
-            File file = new File(path);
+            File file = new File(Common.FilePath);
             //判断当前的文件目录是否存在，如果不存在就创建这个文件目录
             if (!file.exists()) {
                 file.mkdir();
             }
             String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-            String fileName = "IMG_" + timeStamp + ".jpg";
+            String fileName = Common.FilePath + "IMG_" + timeStamp + ".jpg";
             FileOutputStream fileOutputStream = null;
             try {
+                Log.v("xxx2", String.valueOf(data.length));
+                Log.v("xxx3", fileName);
                 fileOutputStream = new FileOutputStream(fileName);
                 fileOutputStream.write(data, 0, data.length);
-
             } catch (IOException e) {
+                Log.v("xxx1","wwww");
                 e.printStackTrace();
             } finally {
                 if (fileOutputStream != null) {

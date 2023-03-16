@@ -5,12 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.ImageFormat;
-import android.graphics.Paint;
-import android.graphics.PointF;
-import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -21,30 +16,23 @@ import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
-import android.media.FaceDetector;
-import android.media.Image;
 import android.media.ImageReader;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
 import android.util.Size;
 import android.util.SparseArray;
 import android.view.MenuItem;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -52,21 +40,12 @@ import androidx.core.content.ContextCompat;
 import com.zhapplication.R;
 import android.view.Surface;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import com.zhapplication.utils.AutoFitTextureView;
 import com.zhapplication.utils.Camera;
-import com.zhapplication.utils.DrawView;
 
 public class FaceInputActivity extends AppCompatActivity {
     private AutoFitTextureView textureView;
@@ -87,10 +66,10 @@ public class FaceInputActivity extends AppCompatActivity {
     private ImageReader imageReader;
     private static final SparseArray ORIENTATION = new SparseArray();
     static {
-        ORIENTATION.append(Surface.ROTATION_0, 90);
-        ORIENTATION.append(Surface.ROTATION_90, 0);
-        ORIENTATION.append(Surface.ROTATION_180, 270);
-        ORIENTATION.append(Surface.ROTATION_270, 180);
+        ORIENTATION.append(Surface.ROTATION_0, 0);
+        ORIENTATION.append(Surface.ROTATION_90, 90);
+        ORIENTATION.append(Surface.ROTATION_180, 180);
+        ORIENTATION.append(Surface.ROTATION_270, 270);
     }
 
     private boolean runClassifier = false;
@@ -144,13 +123,14 @@ public class FaceInputActivity extends AppCompatActivity {
                         Toast.makeText(FaceInputActivity.this, "录入成功", Toast.LENGTH_SHORT).show();
                         unLockFocus();
 
-                        // 录入成功，回主页面
-                        Intent intent1 = new Intent();
-                        intent1.setClass(FaceInputActivity.this, MainActivity.class);
-                        startActivity(intent1);
-                        finish();
+//                        // 录入成功，回主页面
+//                        Intent intent1 = new Intent();
+//                        intent1.setClass(FaceInputActivity.this, MainActivity.class);
+//                        startActivity(intent1);
+//                        finish();
                     }
                 };
+
                 //设置拍照方向
                 cameraDeviceCaptureRequest.set(CaptureRequest.JPEG_ORIENTATION, (Integer) ORIENTATION.get(rotation));
                 mCameraCaptureSession.stopRepeating();
@@ -258,6 +238,7 @@ public class FaceInputActivity extends AppCompatActivity {
         imageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
             @Override
             public void onImageAvailable(ImageReader reader) {
+                Log.v("xxx1", "onImageAvailable");
                 mCameraHandler.post(new Camera.ImageSaver(reader.acquireNextImage()));
             }
 
