@@ -65,8 +65,6 @@ public class Camera {
 
         @Override
         public void run() {
-            String path;
-
             ByteBuffer byteBuffer = image.getPlanes()[0].getBuffer();
             byte[] data = new byte[byteBuffer.remaining()];
             byteBuffer.get(data);

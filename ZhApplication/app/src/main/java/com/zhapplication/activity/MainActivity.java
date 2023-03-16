@@ -2,6 +2,8 @@ package com.zhapplication.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
+import android.app.XzjhSystemManager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
@@ -14,11 +16,15 @@ import android.widget.Button;
 import com.zhapplication.R;
 
 import com.zhapplication.utils.Common;
+import com.zhapplication.utils.fileUtil;
 
 import java.io.File;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
+    XzjhSystemManager mMamager = null;
 
+    @SuppressLint("WrongConstant")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -27,7 +33,13 @@ public class MainActivity extends AppCompatActivity {
         Button btn_login = findViewById(R.id.btn_login);
         btn_login.setOnClickListener(new btnLoginOnClickListener());
 
+        // 设置存储路径
         Common.FilePath = this.getExternalFilesDir(Environment.DIRECTORY_DCIM).getAbsolutePath() + "/";
+
+//        // 【硬件API 初始化】
+//        mMamager = (XzjhSystemManager)getSystemService("xzjh_server");
+//        // 屏幕方向旋转90度，改为竖屏
+//        mMamager.xzjhSetScreenRotation(1);
     }
 
     @Override

@@ -123,11 +123,11 @@ public class FaceInputActivity extends AppCompatActivity {
                         Toast.makeText(FaceInputActivity.this, "录入成功", Toast.LENGTH_SHORT).show();
                         unLockFocus();
 
-//                        // 录入成功，回主页面
-//                        Intent intent1 = new Intent();
-//                        intent1.setClass(FaceInputActivity.this, MainActivity.class);
-//                        startActivity(intent1);
-//                        finish();
+                        // 录入成功，回主页面
+                        Intent intent1 = new Intent();
+                        intent1.setClass(FaceInputActivity.this, MainActivity.class);
+                        startActivity(intent1);
+                        finish();
                     }
                 };
 
@@ -225,7 +225,7 @@ public class FaceInputActivity extends AppCompatActivity {
                 }
                 setUpImageReader();
 //                mCameraId = cameraId;
-                mCameraId = "1"; // 0后置 1前置
+                mCameraId = "109"; // 0后置 1前置 109板子
                 break;
             }
         } catch (CameraAccessException e) {
@@ -238,7 +238,6 @@ public class FaceInputActivity extends AppCompatActivity {
         imageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
             @Override
             public void onImageAvailable(ImageReader reader) {
-                Log.v("xxx1", "onImageAvailable");
                 mCameraHandler.post(new Camera.ImageSaver(reader.acquireNextImage()));
             }
 

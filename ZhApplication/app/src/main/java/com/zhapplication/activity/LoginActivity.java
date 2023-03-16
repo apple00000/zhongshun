@@ -17,6 +17,7 @@ import android.media.ImageReader;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.util.Log;
 import android.util.Size;
 import android.util.SparseArray;
 import android.view.MenuItem;
@@ -32,12 +33,15 @@ import androidx.core.content.ContextCompat;
 import com.zhapplication.R;
 import android.view.Surface;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 
 import com.zhapplication.utils.AutoFitTextureView;
 import com.zhapplication.utils.Camera;
+import com.zhapplication.utils.Common;
+import com.zhapplication.utils.fileUtil;
 
 public class LoginActivity extends AppCompatActivity {
     private AutoFitTextureView textureView;
@@ -64,11 +68,12 @@ public class LoginActivity extends AppCompatActivity {
         ORIENTATION.append(Surface.ROTATION_270, 270);
     }
 
-    
+
     private boolean runClassifier = false;
     private final Object lock = new Object();
-
     private boolean hasFace = false;
+    // 本地的bitmap人脸数据
+    private ArrayList<Bitmap> localFaceBitmapList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,6 +85,13 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
         textureView =  (AutoFitTextureView) findViewById(R.id.textureView_login);
         imageView = (ImageView) findViewById(R.id.imageView_login);
+
+        // 加载本地人脸数据
+        ArrayList<String> file_list = fileUtil.getAllDataFileName(Common.FilePath, "jpg");
+        for (int i = 0;i<file_list.size();i++){
+            Bitmap bm = fileUtil.openImage(Common.FilePath + file_list.get(i));
+            localFaceBitmapList.add(bm);
+        }
     }
 
     @Override
@@ -164,7 +176,7 @@ public class LoginActivity extends AppCompatActivity {
                 }
                 setUpImageReader();
 //                mCameraId = cameraId;
-                mCameraId = "1"; // 0后置 1前置
+                mCameraId = "109"; // 0后置 1前置 109板子
                 break;
             }
         } catch (CameraAccessException e) {
