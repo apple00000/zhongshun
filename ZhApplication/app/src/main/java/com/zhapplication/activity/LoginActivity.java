@@ -2,8 +2,15 @@ package com.zhapplication.activity;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.ImageFormat;
+import android.graphics.Paint;
+import android.graphics.PointF;
+import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -14,28 +21,36 @@ import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.media.FaceDetector;
 import android.media.Image;
 import android.media.ImageReader;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.util.Log;
 import android.util.Size;
 import android.util.SparseArray;
 import android.view.MenuItem;
-import android.view.Surface;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.zhapplication.R;
-import com.zhapplication.utils.Camera;
+import android.view.Surface;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -46,9 +61,16 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import com.zhapplication.utils.AutoFitTextureView;
+import com.zhapplication.utils.Camera;
+import com.zhapplication.utils.DrawView;
 
 public class LoginActivity extends AppCompatActivity {
-    private TextureView textureView;
+    private AutoFitTextureView textureView;
+    private ImageView imageView;
     private HandlerThread handlerThread;
     private Handler mCameraHandler;
     private CameraManager cameraManager;
@@ -71,6 +93,11 @@ public class LoginActivity extends AppCompatActivity {
         ORIENTATION.append(Surface.ROTATION_270, 180);
     }
 
+    private boolean runClassifier = false;
+    private final Object lock = new Object();
+
+    private boolean hasFace = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,7 +106,8 @@ public class LoginActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         setContentView(R.layout.activity_login);
-        textureView = findViewById(R.id.textureView_Login);
+        textureView =  (AutoFitTextureView) findViewById(R.id.textureView_login);
+        imageView = (ImageView) findViewById(R.id.imageView_login);
     }
 
     @Override
@@ -92,6 +120,7 @@ public class LoginActivity extends AppCompatActivity {
         return true;
     }
 
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -99,16 +128,27 @@ public class LoginActivity extends AppCompatActivity {
         startCameraThread();
         if (!textureView.isAvailable()) {
             textureView.setSurfaceTextureListener(mTextureListener);
+            imageView.getLayoutParams().width = textureView.getWidth();
+            imageView.getLayoutParams().height = textureView.getHeight();
         } else {
             startPreview();
         }
+    }
+
+    @Override
+    public void onPause() {
+        closeCamera();
+        stopBackgroundThread();
+        super.onPause();
     }
 
     TextureView.SurfaceTextureListener mTextureListener = new TextureView.SurfaceTextureListener() {
         @Override
         public void onSurfaceTextureAvailable(@NonNull SurfaceTexture surface, int width, int height) {
             //SurfaceTexture组件可用的时候,设置相机参数，并打开摄像头
+            //设置摄像头参数
             setUpCamera(width, height);
+            //打开摄像头
             openCamera();
         }
 
@@ -151,7 +191,8 @@ public class LoginActivity extends AppCompatActivity {
                     });
                 }
                 setUpImageReader();
-                mCameraId = cameraId;
+//                mCameraId = cameraId;
+                mCameraId = "1"; // 0后置 1前置
                 break;
             }
         } catch (CameraAccessException e) {
@@ -161,14 +202,51 @@ public class LoginActivity extends AppCompatActivity {
 
     private void setUpImageReader() {
         imageReader = ImageReader.newInstance(mCaptureSize.getWidth(), mCaptureSize.getHeight(), ImageFormat.JPEG, 2);
-//        imageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
-//            @Override
-//            public void onImageAvailable(ImageReader reader) {
-//                mCameraHandler.post(new Camera.ImageSaver(reader.acquireNextImage()));
-//            }
-//
-//        }, mCameraHandler);
+        imageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
+            @Override
+            public void onImageAvailable(ImageReader reader) {
+                mCameraHandler.post(new Camera.ImageSaver(reader.acquireNextImage()));
+            }
+
+        }, mCameraHandler);
     }
+
+    // 人脸检测
+    private Runnable periodicClassify =
+            new Runnable() {
+                @Override
+                public void run() {
+                    synchronized (lock) {
+                        if (runClassifier) {
+                            Bitmap bitmap = textureView.getBitmap(300, 300);
+                            Bitmap croppedBitmap = Bitmap.createBitmap((int) 300, (int) 300, Bitmap.Config.ARGB_8888);
+                            if (bitmap!=null) {
+                                int[] faceLoc = Camera.getFace(bitmap);
+                                if (faceLoc!=null){
+                                    hasFace = true;
+                                    croppedBitmap = Camera.drawRect(faceLoc[0], faceLoc[1], faceLoc[2], faceLoc[3]);
+
+                                    // 处理登录成功逻辑
+                                }else{
+                                    hasFace = false;
+                                }
+                            }else{
+                                hasFace = false;
+                            }
+
+                            Bitmap finalCroppedBitmap = croppedBitmap;
+                            imageView.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    imageView.setImageBitmap(finalCroppedBitmap);
+                                }
+                            });
+                        }
+                    }
+
+                    mCameraHandler.post(periodicClassify);
+                }
+            };
 
     private void openCamera() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
@@ -179,6 +257,24 @@ public class LoginActivity extends AppCompatActivity {
             cameraManager.openCamera(mCameraId, mStateCallback, mCameraHandler);
         } catch (CameraAccessException e) {
             e.printStackTrace();
+        }
+
+        imageView.getLayoutParams().width = textureView.getWidth();
+        imageView.getLayoutParams().height = textureView.getHeight();
+    }
+
+    private void closeCamera() {
+        if (null != mCameraCaptureSession) {
+            mCameraCaptureSession.close();
+            mCameraCaptureSession = null;
+        }
+        if (null != cameraDevice) {
+            cameraDevice.close();
+            cameraDevice = null;
+        }
+        if (null != imageReader) {
+            imageReader.close();
+            imageReader = null;
         }
     }
 
@@ -242,5 +338,24 @@ public class LoginActivity extends AppCompatActivity {
         handlerThread = new HandlerThread("myHandlerThread");
         handlerThread.start();
         mCameraHandler = new Handler(handlerThread.getLooper());
+        synchronized (lock) {
+            runClassifier = true;
+        }
+        mCameraHandler.post(periodicClassify);
+    }
+
+    // 停止后台线程
+    private void stopBackgroundThread() {
+        handlerThread.quitSafely();
+        try {
+            handlerThread.join();
+            handlerThread = null;
+            mCameraHandler = null;
+            synchronized (lock) {
+                runClassifier = false;
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }

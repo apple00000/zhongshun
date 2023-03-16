@@ -2,6 +2,7 @@ package com.zhapplication.activity;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -38,10 +39,12 @@ import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -58,6 +61,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import com.zhapplication.utils.AutoFitTextureView;
 import com.zhapplication.utils.Camera;
@@ -91,6 +96,8 @@ public class FaceInputActivity extends AppCompatActivity {
     private boolean runClassifier = false;
     private final Object lock = new Object();
 
+    private boolean hasFace = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -119,6 +126,11 @@ public class FaceInputActivity extends AppCompatActivity {
     private final View.OnClickListener OnClick = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
+            if (!hasFace){
+                Toast.makeText(FaceInputActivity.this, "请对准正脸", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             //获取摄像头的请求
             try {
                 CaptureRequest.Builder cameraDeviceCaptureRequest = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
@@ -129,8 +141,14 @@ public class FaceInputActivity extends AppCompatActivity {
                     @Override
                     public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
                         super.onCaptureCompleted(session, request, result);
-                        Toast.makeText(FaceInputActivity.this, "拍照结束，相片已保存！", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(FaceInputActivity.this, "录入成功", Toast.LENGTH_SHORT).show();
                         unLockFocus();
+
+                        // 录入成功，回主页面
+                        Intent intent1 = new Intent();
+                        intent1.setClass(FaceInputActivity.this, MainActivity.class);
+                        startActivity(intent1);
+                        finish();
                     }
                 };
                 //设置拍照方向
@@ -246,9 +264,7 @@ public class FaceInputActivity extends AppCompatActivity {
         }, mCameraHandler);
     }
 
-    /**
-     * 定期拍照并识别
-     */
+    // 人脸检测
     private Runnable periodicClassify =
             new Runnable() {
                 @Override
@@ -256,28 +272,34 @@ public class FaceInputActivity extends AppCompatActivity {
                     synchronized (lock) {
                         if (runClassifier) {
                             Bitmap bitmap = textureView.getBitmap(300, 300);
+                            Bitmap croppedBitmap = Bitmap.createBitmap((int) 300, (int) 300, Bitmap.Config.ARGB_8888);
                             if (bitmap!=null) {
-                                  int[] faceLoc = Camera.getFace(bitmap);
-                                  if (faceLoc!=null){
-                                      Bitmap croppedBitmap = Camera.drawRect(
+                                int[] faceLoc = Camera.getFace(bitmap);
+                                if (faceLoc!=null){
+                                    hasFace = true;
+                                    croppedBitmap = Camera.drawRect(
                                               faceLoc[0],
                                               faceLoc[1],
                                               faceLoc[2],
                                               faceLoc[3]
-                                      );
-
-                                      imageView.post(new Runnable() {
-                                          @Override
-                                          public void run() {
-                                              imageView.setImageBitmap(croppedBitmap);
-                                          }
-                                      });
-                                  }
+                                    );
+                                }else{
+                                    hasFace = false;
+                                }
                             }else{
-                                  Log.e("","");
+                                hasFace = false;
                             }
+
+                            Bitmap finalCroppedBitmap = croppedBitmap;
+                            imageView.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    imageView.setImageBitmap(finalCroppedBitmap);
+                                }
+                            });
                         }
                     }
+
                     mCameraHandler.post(periodicClassify);
                 }
             };

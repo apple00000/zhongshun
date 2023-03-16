@@ -6,9 +6,15 @@
     android:layout_height="match_parent"
     tools:context=".activity.LoginActivity">
 
-    <TextureView
-        android:id="@+id/textureView_Login"
+    <com.zhapplication.utils.AutoFitTextureView
+        android:id="@+id/textureView_login"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
+    <ImageView
+        android:id="@+id/imageView_login"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitXY" />
 
 </RelativeLayout>
