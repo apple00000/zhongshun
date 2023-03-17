@@ -112,6 +112,7 @@ public class FaceInputActivity extends AppCompatActivity {
 
             //获取摄像头的请求
             try {
+                Log.v("xxx1","a1");
                 CaptureRequest.Builder cameraDeviceCaptureRequest = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
                 cameraDeviceCaptureRequest.addTarget(imageReader.getSurface());
                 //获取摄像头的方向
@@ -120,21 +121,19 @@ public class FaceInputActivity extends AppCompatActivity {
                     @Override
                     public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
                         super.onCaptureCompleted(session, request, result);
+                        Log.v("xxx1","a2");
                         Toast.makeText(FaceInputActivity.this, "录入成功", Toast.LENGTH_SHORT).show();
                         unLockFocus();
-
-                        // 录入成功，回主页面
-                        Intent intent1 = new Intent();
-                        intent1.setClass(FaceInputActivity.this, MainActivity.class);
-                        startActivity(intent1);
-                        finish();
                     }
                 };
+                Log.v("xxx1","a5");
 
                 //设置拍照方向
                 cameraDeviceCaptureRequest.set(CaptureRequest.JPEG_ORIENTATION, (Integer) ORIENTATION.get(rotation));
                 mCameraCaptureSession.stopRepeating();
+                Log.v("xxx1","a6");
                 mCameraCaptureSession.capture(cameraDeviceCaptureRequest.build(), mCaptureCallback, mCameraHandler);
+                Log.v("xxx1","a7");
             } catch (CameraAccessException e) {
                 e.printStackTrace();
             }
@@ -225,7 +224,7 @@ public class FaceInputActivity extends AppCompatActivity {
                 }
                 setUpImageReader();
 //                mCameraId = cameraId;
-                mCameraId = "109"; // 0后置 1前置 109板子
+                mCameraId = "1"; // 0后置 1前置 109板子
                 break;
             }
         } catch (CameraAccessException e) {
@@ -238,7 +237,14 @@ public class FaceInputActivity extends AppCompatActivity {
         imageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
             @Override
             public void onImageAvailable(ImageReader reader) {
+                Log.v("xxx1","onImageAvailable");
                 mCameraHandler.post(new Camera.ImageSaver(reader.acquireNextImage()));
+
+                // 录入成功，回主页面
+                Intent intent1 = new Intent();
+                intent1.setClass(FaceInputActivity.this, MainActivity.class);
+                startActivity(intent1);
+                finish();
             }
 
         }, mCameraHandler);

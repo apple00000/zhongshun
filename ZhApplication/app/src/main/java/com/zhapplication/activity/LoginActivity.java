@@ -85,11 +85,11 @@ public class LoginActivity extends AppCompatActivity {
     private ArrayList<Bitmap> localFaceBitmapList = new ArrayList<>();
 
     // 分类器
+    private Classifier classifier;
     private static final String TF_OD_API_MODEL_FILE = "file:///android_asset/frozen_inference_graph_v6.pb";
     private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/coco_labels_list.txt";
     private static final int TF_OD_API_INPUT_SIZE = 300;
     private static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.6f;
-    private Classifier classifier;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,7 +106,6 @@ public class LoginActivity extends AppCompatActivity {
         try {
             classifier = TensorFlowObjectDetectionAPIModel.create(this.getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, TF_OD_API_INPUT_SIZE);
         } catch (IOException e) {
-            Log.e("xxx1","classifier err");
             e.printStackTrace();
         }
 

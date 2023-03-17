@@ -35,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
 
         // 设置存储路径
         Common.FilePath = this.getExternalFilesDir(Environment.DIRECTORY_DCIM).getAbsolutePath() + "/";
+        Log.v("xxx1 Common.FilePath", Common.FilePath);
 
 //        // 【硬件API 初始化】
 //        mMamager = (XzjhSystemManager)getSystemService("xzjh_server");
