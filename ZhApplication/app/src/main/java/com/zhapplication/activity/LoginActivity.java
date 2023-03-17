@@ -4,7 +4,11 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.ImageFormat;
+import android.graphics.Paint;
+import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -32,12 +36,17 @@ import androidx.core.content.ContextCompat;
 
 import com.zhapplication.R;
 import android.view.Surface;
+import android.widget.Toast;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 
+import com.zhapplication.model.Classifier;
+import com.zhapplication.model.TensorFlowObjectDetectionAPIModel;
 import com.zhapplication.utils.AutoFitTextureView;
 import com.zhapplication.utils.Camera;
 import com.zhapplication.utils.Common;
@@ -75,6 +84,13 @@ public class LoginActivity extends AppCompatActivity {
     // 本地的bitmap人脸数据
     private ArrayList<Bitmap> localFaceBitmapList = new ArrayList<>();
 
+    // 分类器
+    private static final String TF_OD_API_MODEL_FILE = "file:///android_asset/frozen_inference_graph_v6.pb";
+    private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/coco_labels_list.txt";
+    private static final int TF_OD_API_INPUT_SIZE = 300;
+    private static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.6f;
+    private Classifier classifier;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -85,6 +101,14 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
         textureView =  (AutoFitTextureView) findViewById(R.id.textureView_login);
         imageView = (ImageView) findViewById(R.id.imageView_login);
+
+        // 初始化分类器
+        try {
+            classifier = TensorFlowObjectDetectionAPIModel.create(this.getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, TF_OD_API_INPUT_SIZE);
+        } catch (IOException e) {
+            Log.e("xxx1","classifier err");
+            e.printStackTrace();
+        }
 
         // 加载本地人脸数据
         ArrayList<String> file_list = fileUtil.getAllDataFileName(Common.FilePath, "jpg");
@@ -175,7 +199,7 @@ public class LoginActivity extends AppCompatActivity {
                 }
                 setUpImageReader();
 //                mCameraId = cameraId;
-                mCameraId = "109"; // 0后置 1前置 109板子
+                mCameraId = "1"; // 0后置 1前置 109板子
                 break;
             }
         } catch (CameraAccessException e) {
@@ -211,6 +235,7 @@ public class LoginActivity extends AppCompatActivity {
                                         if (true) { // 默认成功
                                             signStatus = 1;
                                             imageView.setImageBitmap(croppedBitmap);
+                                            Toast.makeText(LoginActivity.this, "认证成功", Toast.LENGTH_SHORT).show();
                                         }
                                     }
 
@@ -219,6 +244,7 @@ public class LoginActivity extends AppCompatActivity {
                                         croppedBitmap = Camera.drawRect(faceLoc[0], faceLoc[1], faceLoc[2], faceLoc[3]);
                                     }else {
                                         // 检测抽烟
+                                        croppedBitmap = classifyFrame(bitmap);
                                     }
                                 }else{
                                     hasFace = false;
@@ -227,21 +253,76 @@ public class LoginActivity extends AppCompatActivity {
                                 hasFace = false;
                             }
 
-                            if (signStatus==0) {
-                                Bitmap finalCroppedBitmap = croppedBitmap;
-                                imageView.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        imageView.setImageBitmap(finalCroppedBitmap);
-                                    }
-                                });
-                            }
+                            // 画图
+                            Bitmap finalCroppedBitmap = croppedBitmap;
+                            imageView.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    imageView.setImageBitmap(finalCroppedBitmap);
+                                }
+                            });
                         }
                     }
 
                     mCameraHandler.post(periodicClassify);
                 }
             };
+
+    /**
+     * tensorFlow识别
+     */
+    private Bitmap classifyFrame(Bitmap bitmap) {
+        if (classifier == null ) {
+            return null;
+        }
+
+        final List<Classifier.Recognition> results = classifier.recognizeImage(bitmap);
+
+        Bitmap croppedBitmap = Bitmap.createBitmap((int) 300, (int) 300, Bitmap.Config.ARGB_8888);
+        final Canvas canvas = new Canvas(croppedBitmap);
+
+        for (final Classifier.Recognition result : results) {
+            final RectF location = result.getLocation();
+            if (location != null && result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API) {
+                Paint paint = new Paint();
+                Paint paint1 = new Paint();
+                if (result.getTitle().equals("openeyes")) {
+                    paint.setColor(Color.GREEN);
+                    paint1.setColor(Color.GREEN);
+                } else if (result.getTitle().equals("closeeyes")) {
+                    paint.setColor(Color.RED);
+                    paint1.setColor(Color.RED);
+
+                } else if (result.getTitle().equals("phone")) {
+                    paint.setColor(0xFFFF9900);
+                    paint1.setColor(0xFFFF9900);
+
+                } else if (result.getTitle().equals("smoke")) {
+                    paint.setColor(Color.YELLOW);
+                    paint1.setColor(Color.YELLOW);
+                } else
+                    paint.setColor(Color.WHITE);
+
+                paint.setStyle(Paint.Style.STROKE);
+                paint.setStrokeWidth(5.0f);
+                paint.setAntiAlias(true);
+                paint1.setStyle(Paint.Style.FILL);
+                paint1.setAlpha(125);
+                canvas.drawRect(location, paint);
+//                canvas.drawRect(canvasWidth * location.left / TF_OD_API_INPUT_SIZE,
+//                        canvasHeight * location.top / TF_OD_API_INPUT_SIZE,
+//                        canvasWidth * location.right / TF_OD_API_INPUT_SIZE,
+//                        canvasHeight * location.bottom / TF_OD_API_INPUT_SIZE, paint);
+//                canvas.drawRect(canvasWidth * location.left / TF_OD_API_INPUT_SIZE,
+//                        canvasHeight * location.top / TF_OD_API_INPUT_SIZE,
+//                        canvasWidth * location.right / TF_OD_API_INPUT_SIZE,
+//                        canvasHeight * location.bottom / TF_OD_API_INPUT_SIZE, paint1);
+            }
+
+        }
+
+        return croppedBitmap;
+    }
 
     private void openCamera() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
