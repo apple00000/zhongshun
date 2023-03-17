@@ -68,10 +68,10 @@ public class LoginActivity extends AppCompatActivity {
         ORIENTATION.append(Surface.ROTATION_270, 270);
     }
 
-
     private boolean runClassifier = false;
     private final Object lock = new Object();
     private boolean hasFace = false;
+    private int signStatus = 0; // 认证状态，0：未认证，1：已认证
     // 本地的bitmap人脸数据
     private ArrayList<Bitmap> localFaceBitmapList = new ArrayList<>();
 
@@ -103,7 +103,6 @@ public class LoginActivity extends AppCompatActivity {
         }
         return true;
     }
-
 
     @Override
     protected void onResume() {
@@ -207,10 +206,20 @@ public class LoginActivity extends AppCompatActivity {
                             if (bitmap!=null) {
                                 int[] faceLoc = Camera.getFace(bitmap);
                                 if (faceLoc!=null){
-                                    hasFace = true;
-                                    croppedBitmap = Camera.drawRect(faceLoc[0], faceLoc[1], faceLoc[2], faceLoc[3]);
+                                    // 【认证】处理登录成功逻辑，目前默认成功
+                                    if (signStatus==0) {
+                                        if (true) { // 默认成功
+                                            signStatus = 1;
+                                            imageView.setImageBitmap(croppedBitmap);
+                                        }
+                                    }
 
-                                    // 处理登录成功逻辑
+                                    hasFace = true;
+                                    if (signStatus==0){
+                                        croppedBitmap = Camera.drawRect(faceLoc[0], faceLoc[1], faceLoc[2], faceLoc[3]);
+                                    }else {
+                                        // 检测抽烟
+                                    }
                                 }else{
                                     hasFace = false;
                                 }
@@ -218,13 +227,15 @@ public class LoginActivity extends AppCompatActivity {
                                 hasFace = false;
                             }
 
-                            Bitmap finalCroppedBitmap = croppedBitmap;
-                            imageView.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    imageView.setImageBitmap(finalCroppedBitmap);
-                                }
-                            });
+                            if (signStatus==0) {
+                                Bitmap finalCroppedBitmap = croppedBitmap;
+                                imageView.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        imageView.setImageBitmap(finalCroppedBitmap);
+                                    }
+                                });
+                            }
                         }
                     }
 
