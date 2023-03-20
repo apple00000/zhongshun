@@ -15,28 +15,40 @@ import com.zhapplication.utils.Common;
 public class DetecteSeeta {
     int face_num1, face_num2;
     SeetaFace jni;
-    Bitmap mFaceBmp1,mFaceBmp2;//小脸
+
+    // 是人脸
+    public Boolean isSeetaFace(Bitmap face1){
+        CMSeetaFace[] tRetFaces1;
+        tRetFaces1 = jni.DetectFaces(face1, face1);
+        if (tRetFaces1==null) {
+            return false;
+        }
+        return true;
+    }
 
     // 检测人脸相似度，face1、face2为两张脸的bitmap，返回相似度值，介于0-1直接
     public float getSimilarityNum(Bitmap face1, Bitmap face2) {
         if (!Common.modelExist()){
-            Log.v("[getSimilarityNum]","人脸正面检测模型不存在");
+            Log.v("[verifyLoginFace]","人脸正面检测模型不存在");
             return 0.0f;
         }
 
         jni = new SeetaFace();//实例化检测对象
         jni.init(Common.modelPath+"/");
-        mFaceBmp1 = Bitmap.createBitmap(256,256, Bitmap.Config.ARGB_8888);
-        mFaceBmp2 = Bitmap.createBitmap(256,256, Bitmap.Config.ARGB_8888);
+
         CMSeetaFace[] tRetFaces1, tRetFaces2;
-        tRetFaces1 = jni.DetectFaces(face1, mFaceBmp1);
-        tRetFaces2 = jni.DetectFaces(face2, mFaceBmp2);
+        tRetFaces1 = jni.DetectFaces(face1, face1);
+        tRetFaces2 = jni.DetectFaces(face2, face2);
+
+        Log.v("verifyLoginFace face1", face1.getWidth()+" "+face1.getHeight());
+        Log.v("verifyLoginFace face2", face2.getWidth()+" "+face2.getHeight());
+
         if (tRetFaces2==null) {
-            Log.v("[getSimilarityNum]", "tRetFaces2 null");
+            Log.v("[verifyLoginFace]", "tRetFaces2 null");
             return 0.0f;
         }
         if (tRetFaces1==null) {
-            Log.v("[getSimilarityNum]", "tRetFaces1 null");
+            Log.v("[verifyLoginFace]", "tRetFaces1 null");
             return 0.0f;
         }
 

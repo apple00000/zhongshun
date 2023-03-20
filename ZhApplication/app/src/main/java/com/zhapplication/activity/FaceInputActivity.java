@@ -244,6 +244,8 @@ public class FaceInputActivity extends AppCompatActivity {
                 }else{
                     Pic.SaveImage(reader.acquireNextImage());
 
+                    Common.resetLocalFaceImageList();
+
                     //【录入成功】
                     faceLoginSuccessHandle();
                 }
@@ -291,7 +293,7 @@ public class FaceInputActivity extends AppCompatActivity {
                                 }else{
                                     hasFace = false;
                                 }
-//                                bitmap.recycle();
+                                bitmap.recycle();
                             }else{
                                 hasFace = false;
                             }

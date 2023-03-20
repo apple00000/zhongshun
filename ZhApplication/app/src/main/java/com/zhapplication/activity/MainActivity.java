@@ -119,12 +119,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // 加载本地人脸数据
-        ArrayList<String> file_list = fileUtil.getAllDataFileName(Common.FileFace, "jpg");
-        for (int i = 0;i<file_list.size();i++){
-            Bitmap bm = fileUtil.openImage(Common.FileFace + "/" +file_list.get(i));
-            Bitmap bm2 = Pic.imageScale(bm, Common.TF_OD_API_INPUT_SIZE, Common.TF_OD_API_INPUT_SIZE);
-            Common.localFaceBitmapList.add(bm2);
-        }
+        Common.resetLocalFaceImageList();
 
         initialized = true;
         return true;
