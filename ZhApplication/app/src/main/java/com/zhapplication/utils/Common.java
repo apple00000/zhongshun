@@ -12,6 +12,8 @@ import com.zhapplication.model.detection.Classifier;
 import java.io.File;
 import java.util.ArrayList;
 
+import seetaface.CMSeetaFace;
+
 public class Common {
     // app存储根路径，需要在MainActivity中动态初始化
     public static String FilePath;
@@ -35,7 +37,7 @@ public class Common {
     public static final int TF_OD_API_INPUT_SIZE = 300;
     public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.4f;
     // 本地的bitmap人脸数据
-    public static ArrayList<Bitmap> localFaceBitmapList = new ArrayList<>();
+    public static ArrayList<CMSeetaFace> localFaceCMSeetaFaceList = new ArrayList<>();
     // 目标检测分类器
     public static Classifier classifier;
 
@@ -50,9 +52,10 @@ public class Common {
 
     // 验证人脸（通过本地人脸数据）
     public static Boolean verifyLoginFace(Bitmap b) {
-        for (int i = 0; i < localFaceBitmapList.size(); i++){
-            Bitmap localB = localFaceBitmapList.get(i);
-            float y = DetecteSeeta.getSimilarityNum(localB, b);
+        for (int i = 0; i < localFaceCMSeetaFaceList.size(); i++){
+            CMSeetaFace localCM = localFaceCMSeetaFaceList.get(i);
+            CMSeetaFace cm = DetecteSeeta.getSeetaFaceValueWithRotate(b);
+            float y = DetecteSeeta.getSimilarityNum(localCM, cm);
             Log.v("[verifyLoginFace]", i + "-" + String.valueOf(y));
             if (y > FaceSimilarityValue){
                 return true;
@@ -61,17 +64,18 @@ public class Common {
         return false;
     }
 
-    // 重置本地人脸文件
+    // 重置本地人脸特征值
     public static void resetLocalFaceImageList(){
-        ArrayList<Bitmap> tmpFaceList = new ArrayList<>();
+        ArrayList<CMSeetaFace> tmpFaceList = new ArrayList<>();
         // 加载本地人脸数据
         ArrayList<String> file_list = fileUtil.getAllDataFileName(FileFace, "jpg");
         for (int i = 0;i<file_list.size();i++){
             Bitmap bm = fileUtil.openImage(FileFace + "/" +file_list.get(i));
             Bitmap bm2 = Pic.imageScale(bm, TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE);
-            tmpFaceList.add(bm2);
+            CMSeetaFace cm = DetecteSeeta.getSeetaFaceValueWithRotate(bm2);
+            tmpFaceList.add(cm);
         }
 
-        localFaceBitmapList = tmpFaceList;
+        localFaceCMSeetaFaceList = tmpFaceList;
     }
 }

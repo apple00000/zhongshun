@@ -24,6 +24,10 @@ import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import seetaface.CMSeetaFace;
+
+import com.zhapplication.utils.Common;
+
 public class Pic {
     // 得到最佳的预览尺寸
     public static Size getOptimalSize(Size[] sizes, int w, int h) {
@@ -102,7 +106,7 @@ public class Pic {
             return null;
         }
 
-        if (!DetecteSeeta.isSeetaFace(bitmap)){
+        if (null==DetecteSeeta.getSeetaFaceValueWithRotate(bitmap)){
             return null;
         }
 
@@ -131,20 +135,33 @@ public class Pic {
     }
 
     // bitmap 旋转
-    public static Bitmap rotate(Bitmap b, int degrees) {
-        if (degrees != 0 && b != null) {
-            Matrix m = new Matrix();
-            m.setRotate(degrees,(float) b.getWidth() / 2, (float) b.getHeight() / 2);
-            try {
-                Bitmap b2 = Bitmap.createBitmap(b, 0, 0, b.getWidth(), b.getHeight(), m, true);
-                if (b != b2) {
-                    b.recycle();
-                    b = b2;
-                }
-            } catch (OutOfMemoryError ex) {
-            }
+    public static Bitmap bitmapRotate(Bitmap bm, int orientationDegree) {
+        Matrix m = new Matrix();
+        m.setRotate(orientationDegree, (float) bm.getWidth() / 2, (float) bm.getHeight() / 2);
+        float targetX, targetY;
+        if (orientationDegree == 90) {
+            targetX = bm.getHeight();
+            targetY = 0;
+        } else {
+            targetX = bm.getHeight();
+            targetY = bm.getWidth();
         }
-        return b;
+
+        final float[] values = new float[9];
+        m.getValues(values);
+
+        float x1 = values[Matrix.MTRANS_X];
+        float y1 = values[Matrix.MTRANS_Y];
+
+        m.postTranslate(targetX - x1, targetY - y1);
+
+        Bitmap bm1 = Bitmap.createBitmap(bm.getHeight(), bm.getWidth(), Bitmap.Config.ARGB_8888);
+
+        Paint paint = new Paint();
+        Canvas canvas = new Canvas(bm1);
+        canvas.drawBitmap(bm, m, paint);
+
+        return bm1;
     }
 
     // bitmap尺寸变化
@@ -157,4 +174,5 @@ public class Pic {
         matrix.postScale(scale_w, scale_h);
         return Bitmap.createBitmap(bitmap, 0, 0, src_w, src_h, matrix,true);
     }
+
 }

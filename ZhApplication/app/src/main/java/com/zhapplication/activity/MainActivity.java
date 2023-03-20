@@ -95,32 +95,43 @@ public class MainActivity extends AppCompatActivity {
 
     // 主界面初始化，只执行一次
     private Boolean initMainActivity() {
+        Log.v("qqq1","qqq");
         if (initialized){
             return true;
         }
+        Log.v("qqq2","qqq");
 
         // 初始化存储路径
         initPath();
+        Log.v("qqq3","qqq");
 
         // 初始化人脸检测模型
         Boolean isSuccess = initModel();
+        Log.v("qqq4","qqq");
         if (!isSuccess){
+            Log.v("qqq5","qqq");
             return false;
         }
+        Log.v("qqq6","qqq");
 
         // 初始化目标检测分类器
         try {
             Common.classifier = TensorFlowObjectDetectionAPIModel.create(this.getAssets(), Common.TF_OD_API_MODEL_FILE, Common.TF_OD_API_LABELS_FILE, Common.TF_OD_API_INPUT_SIZE);
+            Log.v("qqq7","qqq");
         } catch (IOException e) {
+            Log.v("qqq8","qqq");
             e.printStackTrace();
             return false;
         }
+        Log.v("qqq9","qqq");
 
         // 初始化jni
         DetecteSeeta.initJni();
+        Log.v("qqq10","qqq");
 
         // 加载本地人脸数据
         Common.resetLocalFaceImageList();
+        Log.v("qqq11","qqq");
 
         initialized = true;
         return true;
@@ -129,6 +140,7 @@ public class MainActivity extends AppCompatActivity {
     // 动态初始化存储路径
     private void initPath() {
         Common.FilePath =  this.getExternalFilesDir(Environment.DIRECTORY_DCIM).getAbsolutePath();
+
         Common.FileFace = Common.FilePath + "/face";
         Common.modelPath =  Common.FilePath + "/Model";
         Common.model1Path = Common.modelPath + "/seeta_fa_v1.1.bin";

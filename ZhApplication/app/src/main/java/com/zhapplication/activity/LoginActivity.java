@@ -175,7 +175,7 @@ public class LoginActivity extends AppCompatActivity {
                 }
                 setUpImageReader();
 //                mCameraId = cameraId;
-                mCameraId = "1"; // 0后置 1前置 109板子
+                mCameraId = "109"; // 0后置 1前置 109板子
                 break;
             }
         } catch (CameraAccessException e) {

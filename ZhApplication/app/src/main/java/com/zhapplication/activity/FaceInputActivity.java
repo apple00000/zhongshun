@@ -72,8 +72,9 @@ public class FaceInputActivity extends AppCompatActivity {
     private ImageReader imageReader;
     private static final SparseArray ORIENTATION = new SparseArray();
     static {
+//        ORIENTATION.append(Surface.ROTATION_0, 270);
         ORIENTATION.append(Surface.ROTATION_0, 270);
-        ORIENTATION.append(Surface.ROTATION_90, 0);
+        ORIENTATION.append(Surface.ROTATION_90, 90);
         ORIENTATION.append(Surface.ROTATION_180, 90);
         ORIENTATION.append(Surface.ROTATION_270, 180);
     }
@@ -226,7 +227,7 @@ public class FaceInputActivity extends AppCompatActivity {
                 }
                 setUpImageReader();
 //                mCameraId = cameraId;
-                mCameraId = "1"; // 0后置 1前置 109板子
+                mCameraId = "109"; // 0后置 1前置 109板子
                 break;
             }
         } catch (CameraAccessException e) {
@@ -241,6 +242,7 @@ public class FaceInputActivity extends AppCompatActivity {
             public void onImageAvailable(ImageReader reader) {
                 // 检测这个人是否已经存在于图片库中
                 Bitmap bitmap = textureView.getBitmap(Common.TF_OD_API_INPUT_SIZE, Common.TF_OD_API_INPUT_SIZE);
+                Log.v("verifyLoginFace qqq","qqq");
                 if (Common.verifyLoginFace(bitmap)){
                     Toast.makeText(FaceInputActivity.this, "人脸已经存在", Toast.LENGTH_SHORT).show();
                     backToMain();
