@@ -45,16 +45,6 @@ public class MainActivity extends AppCompatActivity {
         if (!initSuccess){
             finish();
         }
-
-        // 加载本地人脸数据
-//        ArrayList<String> file_list = fileUtil.getAllDataFileName(Common.FileFace, "jpg");
-//        Bitmap bm_0 = fileUtil.openImage(Common.FileFace + "/" +file_list.get(0));
-//        Bitmap bm_1 = fileUtil.openImage(Common.FileFace + "/" +file_list.get(1));
-//
-//        float y = mDetecteSeeta.getSimilarityNum(bm_0, bm_1);
-//        Log.v("xxx1 bm0", bm_0.toString());
-//        Log.v("xxx1 bm1", bm_1.toString());
-//        Log.v("xxx1", String.valueOf(y));
     }
 
     @Override
@@ -95,43 +85,32 @@ public class MainActivity extends AppCompatActivity {
 
     // 主界面初始化，只执行一次
     private Boolean initMainActivity() {
-        Log.v("qqq1","qqq");
         if (initialized){
             return true;
         }
-        Log.v("qqq2","qqq");
 
         // 初始化存储路径
         initPath();
-        Log.v("qqq3","qqq");
 
         // 初始化人脸检测模型
         Boolean isSuccess = initModel();
-        Log.v("qqq4","qqq");
         if (!isSuccess){
-            Log.v("qqq5","qqq");
             return false;
         }
-        Log.v("qqq6","qqq");
 
         // 初始化目标检测分类器
         try {
             Common.classifier = TensorFlowObjectDetectionAPIModel.create(this.getAssets(), Common.TF_OD_API_MODEL_FILE, Common.TF_OD_API_LABELS_FILE, Common.TF_OD_API_INPUT_SIZE);
-            Log.v("qqq7","qqq");
         } catch (IOException e) {
-            Log.v("qqq8","qqq");
             e.printStackTrace();
             return false;
         }
-        Log.v("qqq9","qqq");
 
         // 初始化jni
         DetecteSeeta.initJni();
-        Log.v("qqq10","qqq");
 
         // 加载本地人脸数据
         Common.resetLocalFaceImageList();
-        Log.v("qqq11","qqq");
 
         initialized = true;
         return true;

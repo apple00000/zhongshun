@@ -18,40 +18,37 @@ public class DetecteSeeta {
 
     // 初始化
     public static void initJni(){
-        Log.v("qqq13","qqq");
         jni = new SeetaFace();//实例化检测对象
-        Log.v("qqq14",Common.modelPath);
         jni.init(Common.modelPath+"/");
-        Log.v("qqq15","qqq");
     }
 
     // 获取bitmap旋转后的有效特征
-    public static CMSeetaFace getSeetaFaceValueWithRotate(Bitmap face) {
-        CMSeetaFace c = getSeetaFaceValue(face);
-        if (c!=null){
-            Log.v("CMSeetaFace", "0");
-            return c;
-        }
-        Bitmap f90 = Pic.bitmapRotate(face, 90);
-        c = getSeetaFaceValue(f90);
-        if (c!=null){
-            Log.v("CMSeetaFace", "90");
-            return c;
-        }
-        Bitmap f180 = Pic.bitmapRotate(face, 180);
-        c = getSeetaFaceValue(f180);
-        if (c!=null){
-            Log.v("CMSeetaFace", "180");
-            return c;
-        }
-        Bitmap f270 = Pic.bitmapRotate(face, 270);
-        c = getSeetaFaceValue(f270);
-        if (c!=null){
-            Log.v("CMSeetaFace", "270");
-            return c;
-        }
-        return null;
-    }
+//    public static CMSeetaFace getSeetaFaceValueWithRotate(Bitmap face) {
+//        CMSeetaFace c = getSeetaFaceValue(face);
+//        if (c!=null){
+//            Log.v("CMSeetaFace", "0");
+//            return c;
+//        }
+//        Bitmap f90 = Pic.bitmapRotate(face, 90);
+//        c = getSeetaFaceValue(f90);
+//        if (c!=null){
+//            Log.v("CMSeetaFace", "90");
+//            return c;
+//        }
+//        Bitmap f180 = Pic.bitmapRotate(face, 180);
+//        c = getSeetaFaceValue(f180);
+//        if (c!=null){
+//            Log.v("CMSeetaFace", "180");
+//            return c;
+//        }
+//        Bitmap f270 = Pic.bitmapRotate(face, 270);
+//        c = getSeetaFaceValue(f270);
+//        if (c!=null){
+//            Log.v("CMSeetaFace", "270");
+//            return c;
+//        }
+//        return null;
+//    }
 
     // 获取face特征
     public static CMSeetaFace getSeetaFaceValue(Bitmap face) {
@@ -66,6 +63,13 @@ public class DetecteSeeta {
 
     // 检测人脸相似度，face1、face2为两张脸的bitmap，返回相似度值，介于0-1直接
     public static float getSimilarityNum(CMSeetaFace face1, CMSeetaFace face2) {
+        if (null==face1){
+            Log.v("getSimilarityNum","f1 null");
+        }
+        if (null==face2){
+            Log.v("getSimilarityNum","f2 null");
+        }
+
         return jni.CalcSimilarity(face1.features, face2.features);
     }
 }

@@ -73,18 +73,17 @@ public class FaceInputActivity extends AppCompatActivity {
     private static final SparseArray ORIENTATION = new SparseArray();
     static {
 //        ORIENTATION.append(Surface.ROTATION_0, 270);
-        ORIENTATION.append(Surface.ROTATION_0, 270);
+        ORIENTATION.append(Surface.ROTATION_0, 0);
         ORIENTATION.append(Surface.ROTATION_90, 90);
-        ORIENTATION.append(Surface.ROTATION_180, 90);
-        ORIENTATION.append(Surface.ROTATION_270, 180);
+        ORIENTATION.append(Surface.ROTATION_180, 180);
+        ORIENTATION.append(Surface.ROTATION_270, 270);
     }
 
     private boolean runClassifier = false;
     private final Object lock = new Object();
 
-    private boolean hasFace = false;
-    private int[] faceLocSave = null;
-    private int faceNullCnt = 0;
+    private Pic.PicData faceLocSave = null;   // 人脸特征临时缓存
+    private int faceNullCnt = 0;              // 清空人脸特征的计数
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -242,7 +241,6 @@ public class FaceInputActivity extends AppCompatActivity {
             public void onImageAvailable(ImageReader reader) {
                 // 检测这个人是否已经存在于图片库中
                 Bitmap bitmap = textureView.getBitmap(Common.TF_OD_API_INPUT_SIZE, Common.TF_OD_API_INPUT_SIZE);
-                Log.v("verifyLoginFace qqq","qqq");
                 if (Common.verifyLoginFace(bitmap)){
                     Toast.makeText(FaceInputActivity.this, "人脸已经存在", Toast.LENGTH_SHORT).show();
                     backToMain();
@@ -286,15 +284,14 @@ public class FaceInputActivity extends AppCompatActivity {
                             Bitmap bitmap = textureView.getBitmap(Common.TF_OD_API_INPUT_SIZE, Common.TF_OD_API_INPUT_SIZE);
                             Bitmap croppedBitmap = Bitmap.createBitmap((int) Common.TF_OD_API_INPUT_SIZE, (int) Common.TF_OD_API_INPUT_SIZE, Bitmap.Config.ARGB_8888);
                             if (bitmap!=null) {
-                                int[] faceLoc = Pic.getFace(bitmap);
+                                Pic.PicData faceLoc = Pic.getFace(bitmap);
                                 if (faceLoc!=null){
                                     faceLocSave = faceLoc;
-                                    hasFace = true;
                                     croppedBitmap = Pic.drawRect(
-                                              faceLoc[0],
-                                              faceLoc[1],
-                                              faceLoc[2],
-                                              faceLoc[3]
+                                            faceLoc.rect[0],
+                                            faceLoc.rect[1],
+                                            faceLoc.rect[2],
+                                            faceLoc.rect[3]
                                     );
                                 }else{
                                     faceNullCnt++;
@@ -302,7 +299,6 @@ public class FaceInputActivity extends AppCompatActivity {
                                         faceNullCnt=0;
                                         faceLocSave=null;
                                     }
-                                    hasFace = false;
                                 }
 //                                bitmap.recycle();
                             }else{
@@ -311,7 +307,6 @@ public class FaceInputActivity extends AppCompatActivity {
                                     faceNullCnt=0;
                                     faceLocSave=null;
                                 }
-                                hasFace = false;
                             }
 
                             Bitmap finalCroppedBitmap = croppedBitmap;

@@ -29,6 +29,12 @@ import seetaface.CMSeetaFace;
 import com.zhapplication.utils.Common;
 
 public class Pic {
+    // 人脸特征
+    public static class PicData {
+        public int[] rect;     // android人脸检测边框属性
+        public CMSeetaFace cm; // seetaFace人脸特征
+    }
+
     // 得到最佳的预览尺寸
     public static Size getOptimalSize(Size[] sizes, int w, int h) {
         final double ASPECT_TOLERANCE = 0.1;
@@ -89,9 +95,8 @@ public class Pic {
     }
 
     // 检测是否有人脸，并返回人脸坐标
-    public static int[] getFace(Bitmap bitmap) {
-        int[] res = new int[4];
-
+    public static PicData getFace(Bitmap bitmap) {
+        PicData res = new PicData();
         if (null == bitmap){
             return null;
         }
@@ -106,18 +111,21 @@ public class Pic {
             return null;
         }
 
-        if (null==DetecteSeeta.getSeetaFaceValueWithRotate(bitmap)){
+        CMSeetaFace cm = DetecteSeeta.getSeetaFaceValue(bitmap);
+        if (null==cm){
             return null;
         }
+        res.cm = cm;
 
         float eyesDistance = 0f;
         PointF eyeMidPoint = new PointF();
         mFace[0].getMidPoint(eyeMidPoint);
         eyesDistance = (float) (mFace[0].eyesDistance());
-        res[0] = (int)(eyeMidPoint.x-eyesDistance);
-        res[1] = (int)(eyeMidPoint.y-eyesDistance);
-        res[2] = (int)(eyeMidPoint.x+eyesDistance);
-        res[3] = (int)(eyeMidPoint.y+eyesDistance);
+        res.rect[0] = (int)(eyeMidPoint.x-eyesDistance);
+        res.rect[1] = (int)(eyeMidPoint.y-eyesDistance);
+        res.rect[2] = (int)(eyeMidPoint.x+eyesDistance);
+        res.rect[3] = (int)(eyeMidPoint.y+eyesDistance);
+
         return res;
     }
 

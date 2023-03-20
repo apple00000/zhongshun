@@ -52,15 +52,18 @@ public class Common {
 
     // 验证人脸（通过本地人脸数据）
     public static Boolean verifyLoginFace(Bitmap b) {
+        CMSeetaFace cm = DetecteSeeta.getSeetaFaceValue(b);
+        Log.v("verifyLoginFace","begin");
         for (int i = 0; i < localFaceCMSeetaFaceList.size(); i++){
             CMSeetaFace localCM = localFaceCMSeetaFaceList.get(i);
-            CMSeetaFace cm = DetecteSeeta.getSeetaFaceValueWithRotate(b);
+            Log.v("verifyLoginFace","begin1");
             float y = DetecteSeeta.getSimilarityNum(localCM, cm);
             Log.v("[verifyLoginFace]", i + "-" + String.valueOf(y));
             if (y > FaceSimilarityValue){
                 return true;
             }
         }
+        Log.v("verifyLoginFace","end");
         return false;
     }
 
@@ -72,8 +75,12 @@ public class Common {
         for (int i = 0;i<file_list.size();i++){
             Bitmap bm = fileUtil.openImage(FileFace + "/" +file_list.get(i));
             Bitmap bm2 = Pic.imageScale(bm, TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE);
-            CMSeetaFace cm = DetecteSeeta.getSeetaFaceValueWithRotate(bm2);
-            tmpFaceList.add(cm);
+            CMSeetaFace cm = DetecteSeeta.getSeetaFaceValue(bm2);
+            if (null!=cm) {
+                tmpFaceList.add(cm);
+            }else{
+                Log.e("resetLocalFaceImageList", "null");
+            }
         }
 
         localFaceCMSeetaFaceList = tmpFaceList;

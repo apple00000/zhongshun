@@ -207,7 +207,7 @@ public class LoginActivity extends AppCompatActivity {
                                 // 【检测】抽烟、电话、疲劳
                                 croppedBitmap = classifyFrame(bitmap);
                             }else{
-                                int[] faceLoc = Pic.getFace(bitmap);
+                                Pic.PicData faceLoc = Pic.getFace(bitmap);
                                 if (faceLoc!=null){
                                     // 【认证】处理登录成功逻辑，目前默认成功
                                     if (0==signStatus) {
@@ -217,7 +217,7 @@ public class LoginActivity extends AppCompatActivity {
                                             Toast.makeText(LoginActivity.this, "认证成功", Toast.LENGTH_SHORT).show();
                                         }
 
-                                        croppedBitmap = Pic.drawRect(faceLoc[0], faceLoc[1], faceLoc[2], faceLoc[3]);
+                                        croppedBitmap = Pic.drawRect(faceLoc.rect[0], faceLoc.rect[1], faceLoc.rect[2], faceLoc.rect[3]);
                                     }else {
 
                                     }
