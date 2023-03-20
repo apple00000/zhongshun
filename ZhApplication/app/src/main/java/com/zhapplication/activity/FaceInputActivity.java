@@ -1,5 +1,10 @@
 package com.zhapplication.activity;
 
+/*
+*   人脸录入界面
+*   人脸捕捉成功的处理逻辑在 setUpImageReader -> onImageAvailable 中
+* */
+
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
@@ -21,7 +26,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.util.Log;
 import android.util.Size;
 import android.util.SparseArray;
 import android.view.MenuItem;
@@ -45,7 +49,8 @@ import java.util.Collections;
 import java.util.Comparator;
 
 import com.zhapplication.utils.AutoFitTextureView;
-import com.zhapplication.utils.Camera;
+import com.zhapplication.utils.Common;
+import com.zhapplication.utils.Pic;
 
 public class FaceInputActivity extends AppCompatActivity {
     private AutoFitTextureView textureView;
@@ -66,10 +71,10 @@ public class FaceInputActivity extends AppCompatActivity {
     private ImageReader imageReader;
     private static final SparseArray ORIENTATION = new SparseArray();
     static {
-        ORIENTATION.append(Surface.ROTATION_0, 0);
-        ORIENTATION.append(Surface.ROTATION_90, 90);
-        ORIENTATION.append(Surface.ROTATION_180, 180);
-        ORIENTATION.append(Surface.ROTATION_270, 270);
+        ORIENTATION.append(Surface.ROTATION_0, 270);
+        ORIENTATION.append(Surface.ROTATION_90, 0);
+        ORIENTATION.append(Surface.ROTATION_180, 90);
+        ORIENTATION.append(Surface.ROTATION_270, 180);
     }
 
     private boolean runClassifier = false;
@@ -105,6 +110,7 @@ public class FaceInputActivity extends AppCompatActivity {
     private final View.OnClickListener OnClick = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
+            // 点击拍照按钮时，需要有人脸才可以
             if (!hasFace){
                 Toast.makeText(FaceInputActivity.this, "请对准正脸", Toast.LENGTH_SHORT).show();
                 return;
@@ -112,7 +118,6 @@ public class FaceInputActivity extends AppCompatActivity {
 
             //获取摄像头的请求
             try {
-                Log.v("xxx1","a1");
                 CaptureRequest.Builder cameraDeviceCaptureRequest = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
                 cameraDeviceCaptureRequest.addTarget(imageReader.getSurface());
                 //获取摄像头的方向
@@ -121,19 +126,13 @@ public class FaceInputActivity extends AppCompatActivity {
                     @Override
                     public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
                         super.onCaptureCompleted(session, request, result);
-                        Log.v("xxx1","a2");
-                        Toast.makeText(FaceInputActivity.this, "录入成功", Toast.LENGTH_SHORT).show();
-                        unLockFocus();
                     }
                 };
-                Log.v("xxx1","a5");
 
                 //设置拍照方向
                 cameraDeviceCaptureRequest.set(CaptureRequest.JPEG_ORIENTATION, (Integer) ORIENTATION.get(rotation));
                 mCameraCaptureSession.stopRepeating();
-                Log.v("xxx1","a6");
                 mCameraCaptureSession.capture(cameraDeviceCaptureRequest.build(), mCaptureCallback, mCameraHandler);
-                Log.v("xxx1","a7");
             } catch (CameraAccessException e) {
                 e.printStackTrace();
             }
@@ -214,7 +213,7 @@ public class FaceInputActivity extends AppCompatActivity {
                 }
                 StreamConfigurationMap map = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
                 if (map != null) { //找到摄像头能够输出的，最符合我们当前屏幕能显示的最小分辨率
-                    previewSize = Camera.getOptimalSize(map.getOutputSizes(SurfaceTexture.class), width, height);
+                    previewSize = Pic.getOptimalSize(map.getOutputSizes(SurfaceTexture.class), width, height);
                     mCaptureSize = Collections.max(Arrays.asList(map.getOutputSizes(ImageFormat.JPEG)), new Comparator<Size>() {
                         @Override
                         public int compare(Size o1, Size o2) {
@@ -237,17 +236,37 @@ public class FaceInputActivity extends AppCompatActivity {
         imageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
             @Override
             public void onImageAvailable(ImageReader reader) {
-                Log.v("xxx1","onImageAvailable");
-                mCameraHandler.post(new Camera.ImageSaver(reader.acquireNextImage()));
+                // 检测这个人是否已经存在于图片库中
+                Bitmap bitmap = textureView.getBitmap(Common.TF_OD_API_INPUT_SIZE, Common.TF_OD_API_INPUT_SIZE);
+                if (Common.verifyLoginFace(bitmap)){
+                    Toast.makeText(FaceInputActivity.this, "人脸已经存在", Toast.LENGTH_SHORT).show();
+                    backToMain();
+                }else{
+                    Pic.SaveImage(reader.acquireNextImage());
 
-                // 录入成功，回主页面
-                Intent intent1 = new Intent();
-                intent1.setClass(FaceInputActivity.this, MainActivity.class);
-                startActivity(intent1);
-                finish();
+                    //【录入成功】
+                    faceLoginSuccessHandle();
+                }
             }
-
         }, mCameraHandler);
+    }
+
+    // 人脸录入成功时的处理逻辑
+    private void faceLoginSuccessHandle() {
+        // 提示
+        Toast.makeText(FaceInputActivity.this, "人脸录入成功", Toast.LENGTH_SHORT).show();
+        unLockFocus();
+
+        // 回到主界面
+        backToMain();
+    }
+
+    // 返回主界面
+    private void backToMain(){
+        Intent intent1 = new Intent();
+        intent1.setClass(FaceInputActivity.this, MainActivity.class);
+        startActivity(intent1);
+        finish();
     }
 
     // 人脸检测
@@ -257,13 +276,13 @@ public class FaceInputActivity extends AppCompatActivity {
                 public void run() {
                     synchronized (lock) {
                         if (runClassifier) {
-                            Bitmap bitmap = textureView.getBitmap(300, 300);
-                            Bitmap croppedBitmap = Bitmap.createBitmap((int) 300, (int) 300, Bitmap.Config.ARGB_8888);
+                            Bitmap bitmap = textureView.getBitmap(Common.TF_OD_API_INPUT_SIZE, Common.TF_OD_API_INPUT_SIZE);
+                            Bitmap croppedBitmap = Bitmap.createBitmap((int) Common.TF_OD_API_INPUT_SIZE, (int) Common.TF_OD_API_INPUT_SIZE, Bitmap.Config.ARGB_8888);
                             if (bitmap!=null) {
-                                int[] faceLoc = Camera.getFace(bitmap);
+                                int[] faceLoc = Pic.getFace(bitmap);
                                 if (faceLoc!=null){
                                     hasFace = true;
-                                    croppedBitmap = Camera.drawRect(
+                                    croppedBitmap = Pic.drawRect(
                                               faceLoc[0],
                                               faceLoc[1],
                                               faceLoc[2],
@@ -272,6 +291,7 @@ public class FaceInputActivity extends AppCompatActivity {
                                 }else{
                                     hasFace = false;
                                 }
+//                                bitmap.recycle();
                             }else{
                                 hasFace = false;
                             }

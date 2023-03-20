@@ -1,8 +1,11 @@
 package com.zhapplication.utils;
 
+/*
+* 自适应的TextureView
+* */
+
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.TextureView;
 
 /** A {@link TextureView} that can be adjusted to a specified aspect ratio. */

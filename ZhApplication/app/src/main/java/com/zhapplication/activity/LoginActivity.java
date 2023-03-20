@@ -45,12 +45,13 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import com.zhapplication.model.Classifier;
-import com.zhapplication.model.TensorFlowObjectDetectionAPIModel;
+import com.zhapplication.model.detection.Classifier;
+import com.zhapplication.model.detection.TensorFlowObjectDetectionAPIModel;
 import com.zhapplication.utils.AutoFitTextureView;
-import com.zhapplication.utils.Camera;
+import com.zhapplication.utils.Pic;
 import com.zhapplication.utils.Common;
 import com.zhapplication.utils.fileUtil;
+import com.zhapplication.model.compare.DetecteSeeta;
 
 public class LoginActivity extends AppCompatActivity {
     private AutoFitTextureView textureView;
@@ -79,17 +80,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private boolean runClassifier = false;
     private final Object lock = new Object();
-    private boolean hasFace = false;
     private int signStatus = 0; // 认证状态，0：未认证，1：已认证
-    // 本地的bitmap人脸数据
-    private ArrayList<Bitmap> localFaceBitmapList = new ArrayList<>();
-
-    // 分类器
-    private Classifier classifier;
-    private static final String TF_OD_API_MODEL_FILE = "file:///android_asset/frozen_inference_graph_v6.pb";
-    private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/coco_labels_list.txt";
-    private static final int TF_OD_API_INPUT_SIZE = 300;
-    private static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.6f;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,20 +92,6 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
         textureView =  (AutoFitTextureView) findViewById(R.id.textureView_login);
         imageView = (ImageView) findViewById(R.id.imageView_login);
-
-        // 初始化分类器
-        try {
-            classifier = TensorFlowObjectDetectionAPIModel.create(this.getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, TF_OD_API_INPUT_SIZE);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        // 加载本地人脸数据
-        ArrayList<String> file_list = fileUtil.getAllDataFileName(Common.FilePath, "jpg");
-        for (int i = 0;i<file_list.size();i++){
-            Bitmap bm = fileUtil.openImage(Common.FilePath + file_list.get(i));
-            localFaceBitmapList.add(bm);
-        }
     }
 
     @Override
@@ -188,7 +165,7 @@ public class LoginActivity extends AppCompatActivity {
                 }
                 StreamConfigurationMap map = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
                 if (map != null) { //找到摄像头能够输出的，最符合我们当前屏幕能显示的最小分辨率
-                    previewSize = Camera.getOptimalSize(map.getOutputSizes(SurfaceTexture.class), width, height);
+                    previewSize = Pic.getOptimalSize(map.getOutputSizes(SurfaceTexture.class), width, height);
                     mCaptureSize = Collections.max(Arrays.asList(map.getOutputSizes(ImageFormat.JPEG)), new Comparator<Size>() {
                         @Override
                         public int compare(Size o1, Size o2) {
@@ -211,7 +188,6 @@ public class LoginActivity extends AppCompatActivity {
         imageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
             @Override
             public void onImageAvailable(ImageReader reader) {
-                mCameraHandler.post(new Camera.ImageSaver(reader.acquireNextImage()));
             }
 
         }, mCameraHandler);
@@ -219,70 +195,67 @@ public class LoginActivity extends AppCompatActivity {
 
     // 人脸检测
     private Runnable periodicClassify =
-            new Runnable() {
-                @Override
-                public void run() {
-                    synchronized (lock) {
-                        if (runClassifier) {
-                            Bitmap bitmap = textureView.getBitmap(300, 300);
-                            Bitmap croppedBitmap = Bitmap.createBitmap((int) 300, (int) 300, Bitmap.Config.ARGB_8888);
-                            if (bitmap!=null) {
-                                int[] faceLoc = Camera.getFace(bitmap);
-                                if (faceLoc!=null){
-                                    // 【认证】处理登录成功逻辑，目前默认成功
-                                    if (signStatus==0) {
-                                        if (true) { // 默认成功
-                                            signStatus = 1;
-                                            imageView.setImageBitmap(croppedBitmap);
-                                            Toast.makeText(LoginActivity.this, "认证成功", Toast.LENGTH_SHORT).show();
-                                        }
+        new Runnable() {
+            @Override
+            public void run() {
+                synchronized (lock) {
+                    if (runClassifier) {
+                        Bitmap bitmap = textureView.getBitmap(300, 300);
+                        Bitmap croppedBitmap = Bitmap.createBitmap((int) 300, (int) 300, Bitmap.Config.ARGB_8888);
+                        if (bitmap!=null) {
+                            int[] faceLoc = Pic.getFace(bitmap);
+                            if (faceLoc!=null){
+                                // 【认证】处理登录成功逻辑，目前默认成功
+                                if (signStatus==0) {
+                                    if (Common.verifyLoginFace(bitmap)) { // 默认成功
+                                        signStatus = 1;
+                                        imageView.setImageBitmap(croppedBitmap);
+                                        Toast.makeText(LoginActivity.this, "认证成功", Toast.LENGTH_SHORT).show();
                                     }
-
-                                    hasFace = true;
-                                    if (signStatus==0){
-                                        croppedBitmap = Camera.drawRect(faceLoc[0], faceLoc[1], faceLoc[2], faceLoc[3]);
-                                    }else {
-                                        // 检测抽烟
-                                        croppedBitmap = classifyFrame(bitmap);
-                                    }
-                                }else{
-                                    hasFace = false;
                                 }
+
+                                if (signStatus==0){
+                                    croppedBitmap = Pic.drawRect(faceLoc[0], faceLoc[1], faceLoc[2], faceLoc[3]);
+                                }else {
+                                    // 【检测】抽烟、电话、疲劳
+                                    croppedBitmap = classifyFrame(bitmap);
+                                }
+
+                                bitmap.recycle();
                             }else{
-                                hasFace = false;
                             }
-
-                            // 画图
-                            Bitmap finalCroppedBitmap = croppedBitmap;
-                            imageView.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    imageView.setImageBitmap(finalCroppedBitmap);
-                                }
-                            });
+                        }else{
                         }
+
+                        // 画图
+                        Bitmap finalCroppedBitmap = croppedBitmap;
+                        imageView.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                imageView.setImageBitmap(finalCroppedBitmap);
+                            }
+                        });
                     }
-
-                    mCameraHandler.post(periodicClassify);
                 }
-            };
 
-    /**
-     * tensorFlow识别
-     */
+                mCameraHandler.post(periodicClassify);
+            }
+        };
+
+    // 识别 抽烟电话疲劳
     private Bitmap classifyFrame(Bitmap bitmap) {
-        if (classifier == null ) {
+        if (Common.classifier == null ) {
             return null;
         }
 
-        final List<Classifier.Recognition> results = classifier.recognizeImage(bitmap);
+        final List<Classifier.Recognition> results = Common.classifier.recognizeImage(bitmap);
 
-        Bitmap croppedBitmap = Bitmap.createBitmap((int) 300, (int) 300, Bitmap.Config.ARGB_8888);
+        Bitmap croppedBitmap = Bitmap.createBitmap((int) Common.TF_OD_API_INPUT_SIZE, (int) Common.TF_OD_API_INPUT_SIZE, Bitmap.Config.ARGB_8888);
         final Canvas canvas = new Canvas(croppedBitmap);
 
         for (final Classifier.Recognition result : results) {
             final RectF location = result.getLocation();
-            if (location != null && result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API) {
+            if (location != null && result.getConfidence() >= Common.MINIMUM_CONFIDENCE_TF_OD_API) {
                 Paint paint = new Paint();
                 Paint paint1 = new Paint();
                 if (result.getTitle().equals("openeyes")) {
@@ -308,16 +281,7 @@ public class LoginActivity extends AppCompatActivity {
                 paint1.setStyle(Paint.Style.FILL);
                 paint1.setAlpha(125);
                 canvas.drawRect(location, paint);
-//                canvas.drawRect(canvasWidth * location.left / TF_OD_API_INPUT_SIZE,
-//                        canvasHeight * location.top / TF_OD_API_INPUT_SIZE,
-//                        canvasWidth * location.right / TF_OD_API_INPUT_SIZE,
-//                        canvasHeight * location.bottom / TF_OD_API_INPUT_SIZE, paint);
-//                canvas.drawRect(canvasWidth * location.left / TF_OD_API_INPUT_SIZE,
-//                        canvasHeight * location.top / TF_OD_API_INPUT_SIZE,
-//                        canvasWidth * location.right / TF_OD_API_INPUT_SIZE,
-//                        canvasHeight * location.bottom / TF_OD_API_INPUT_SIZE, paint1);
             }
-
         }
 
         return croppedBitmap;
