@@ -28,6 +28,9 @@ import seetaface.CMSeetaFace;
 
 import com.zhapplication.utils.Common;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class Pic {
     // 人脸特征
     public static class PicData {
@@ -65,6 +68,14 @@ public class Pic {
         return optimalSize;
     }
 
+    // 存储人脸特征
+    public static void SaveCM(CMSeetaFace cm) throws JSONException {
+        JSONObject obj = new JSONObject();
+        obj.putOpt("1", cm);
+        String raw = obj.toString();
+        Log.v("SaveCM", raw);
+    }
+
     // 保存图片
     public static void SaveImage(Image image) {
         ByteBuffer byteBuffer = image.getPlanes()[0].getBuffer();
@@ -97,6 +108,9 @@ public class Pic {
     // 检测是否有人脸，并返回人脸坐标
     public static PicData getFace(Bitmap bitmap) {
         PicData res = new PicData();
+        res.rect = new int[4];
+        res.cm = new CMSeetaFace();
+
         if (null == bitmap){
             return null;
         }

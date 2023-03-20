@@ -49,9 +49,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 
+import com.zhapplication.model.compare.DetecteSeeta;
 import com.zhapplication.utils.AutoFitTextureView;
 import com.zhapplication.utils.Common;
 import com.zhapplication.utils.Pic;
+
+import org.json.JSONException;
+
+import seetaface.CMSeetaFace;
 
 public class FaceInputActivity extends AppCompatActivity {
     private AutoFitTextureView textureView;
@@ -246,6 +251,13 @@ public class FaceInputActivity extends AppCompatActivity {
                     backToMain();
                 }else{
                     Pic.SaveImage(reader.acquireNextImage());
+
+                    String s1 = DetecteSeeta.CMSeetaFace2String(faceLocSave.cm);
+                    CMSeetaFace cm1 = DetecteSeeta.String2CMSeetaFace(s1);
+                    String s2 = DetecteSeeta.CMSeetaFace2String(cm1);
+                    if (s1.equals(s2)){
+                        Log.v("aaaaa","aaaaa");
+                    }
 
                     Common.resetLocalFaceImageList();
 

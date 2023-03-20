@@ -13,6 +13,8 @@ import seetaface.SeetaFace;
 import com.zhapplication.utils.Common;
 import com.zhapplication.utils.Pic;
 
+import java.util.Arrays;
+
 public class DetecteSeeta {
     private static SeetaFace jni;
 
@@ -71,5 +73,46 @@ public class DetecteSeeta {
         }
 
         return jni.CalcSimilarity(face1.features, face2.features);
+    }
+
+    // 【格式转化】CMSeetaFace -> String
+    public static String CMSeetaFace2String(CMSeetaFace cm) {
+        String s = "";
+        s+=cm.left+","+cm.right+","+cm.top+","+cm.bottom+",";
+        s+=cm.roll_angle+","+cm.pitch_angle+","+cm.yaw_angle+",";
+        for (int i=0;i<cm.landmarks.length;i++){
+            s+=cm.landmarks[i]+",";
+        }
+        for (int i=0;i<cm.features.length-1;i++){
+            s+=cm.features[i]+",";
+        }
+        s+=cm.features[cm.features.length-1];
+        Log.v("CMSeetaFace2String", s);
+        return s;
+    }
+
+    // 【格式转化】 String -> CMSeetaFace
+    public static CMSeetaFace String2CMSeetaFace(String s) {
+        CMSeetaFace cm = new CMSeetaFace();
+        String[] ss = s.split(",");
+        if (ss.length!=2065){
+            Log.v("String2CMSeetaFace","not 2065"+"   "+ss.length);
+            return null;
+        }
+        cm.left= Integer.parseInt(ss[0]);
+        cm.right= Integer.parseInt(ss[1]);
+        cm.top= Integer.parseInt(ss[2]);
+        cm.bottom= Integer.parseInt(ss[3]);
+        cm.roll_angle= Float.parseFloat(ss[4]);
+        cm.pitch_angle= Float.parseFloat(ss[5]);
+        cm.yaw_angle= Float.parseFloat(ss[6]);
+        for (int i=0;i<10;i++){
+            cm.landmarks[i]=Integer.parseInt(ss[i+7]);
+        }
+        for (int i=0;i<2048;i++){
+            cm.features[i]=Float.parseFloat(ss[i+17]);
+        }
+
+        return cm;
     }
 }
