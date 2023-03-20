@@ -3,7 +3,6 @@ package com.zhapplication.utils;
 /*
 *   系统路径变量
 * */
-
 import android.graphics.Bitmap;
 import android.util.Log;
 
@@ -33,12 +32,11 @@ public class Common {
     // 目标检测模型
     public static final String TF_OD_API_MODEL_FILE = "file:///android_asset/frozen_inference_graph_v6.pb";
     public static final String TF_OD_API_LABELS_FILE = "file:///android_asset/coco_labels_list.txt";
-    public static final int TF_OD_API_INPUT_SIZE = 500;
+    public static final int TF_OD_API_INPUT_SIZE = 300;
     public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.6f;
     // 本地的bitmap人脸数据
     public static ArrayList<Bitmap> localFaceBitmapList = new ArrayList<>();
     // 目标检测分类器
-    public static DetecteSeeta mDetecteSeeta = new DetecteSeeta();
     public static Classifier classifier;
 
     // 判断模型文件是否已经存在
@@ -54,7 +52,7 @@ public class Common {
     public static Boolean verifyLoginFace(Bitmap b) {
         for (int i = 0; i < localFaceBitmapList.size(); i++){
             Bitmap localB = localFaceBitmapList.get(i);
-            float y = mDetecteSeeta.getSimilarityNum(localB, b);
+            float y = DetecteSeeta.getSimilarityNum(localB, b);
             Log.v("[verifyLoginFace]", i + "-" + String.valueOf(y));
             if (y > FaceSimilarityValue){
                 return true;

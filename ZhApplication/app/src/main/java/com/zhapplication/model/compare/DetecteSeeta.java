@@ -13,12 +13,18 @@ import seetaface.SeetaFace;
 import com.zhapplication.utils.Common;
 
 public class DetecteSeeta {
-    int face_num1, face_num2;
-    SeetaFace jni;
+    private static SeetaFace jni;
+
+    // 初始化
+    public static void initJni(){
+        jni = new SeetaFace();//实例化检测对象
+        jni.init(Common.modelPath+"/");
+    }
 
     // 是人脸
-    public Boolean isSeetaFace(Bitmap face1){
+    public static Boolean isSeetaFace(Bitmap face1){
         CMSeetaFace[] tRetFaces1;
+
         tRetFaces1 = jni.DetectFaces(face1, face1);
         if (tRetFaces1==null) {
             return false;
@@ -27,15 +33,13 @@ public class DetecteSeeta {
     }
 
     // 检测人脸相似度，face1、face2为两张脸的bitmap，返回相似度值，介于0-1直接
-    public float getSimilarityNum(Bitmap face1, Bitmap face2) {
+    public static float getSimilarityNum(Bitmap face1, Bitmap face2) {
         if (!Common.modelExist()){
             Log.v("[verifyLoginFace]","人脸正面检测模型不存在");
             return 0.0f;
         }
 
-        jni = new SeetaFace();//实例化检测对象
-        jni.init(Common.modelPath+"/");
-
+        int face_num1, face_num2;
         CMSeetaFace[] tRetFaces1, tRetFaces2;
         tRetFaces1 = jni.DetectFaces(face1, face1);
         tRetFaces2 = jni.DetectFaces(face2, face2);

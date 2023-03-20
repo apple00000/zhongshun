@@ -26,6 +26,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.util.Log;
 import android.util.Size;
 import android.util.SparseArray;
 import android.view.MenuItem;
@@ -81,6 +82,8 @@ public class FaceInputActivity extends AppCompatActivity {
     private final Object lock = new Object();
 
     private boolean hasFace = false;
+    private int[] faceLocSave = null;
+    private int faceNullCnt = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -111,7 +114,7 @@ public class FaceInputActivity extends AppCompatActivity {
         @Override
         public void onClick(View v) {
             // 点击拍照按钮时，需要有人脸才可以
-            if (!hasFace){
+            if (null == faceLocSave){
                 Toast.makeText(FaceInputActivity.this, "请对准正脸", Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -283,6 +286,7 @@ public class FaceInputActivity extends AppCompatActivity {
                             if (bitmap!=null) {
                                 int[] faceLoc = Pic.getFace(bitmap);
                                 if (faceLoc!=null){
+                                    faceLocSave = faceLoc;
                                     hasFace = true;
                                     croppedBitmap = Pic.drawRect(
                                               faceLoc[0],
@@ -291,10 +295,20 @@ public class FaceInputActivity extends AppCompatActivity {
                                               faceLoc[3]
                                     );
                                 }else{
+                                    faceNullCnt++;
+                                    if (25==faceNullCnt){
+                                        faceNullCnt=0;
+                                        faceLocSave=null;
+                                    }
                                     hasFace = false;
                                 }
                                 bitmap.recycle();
                             }else{
+                                faceNullCnt++;
+                                if (25==faceNullCnt){
+                                    faceNullCnt=0;
+                                    faceLocSave=null;
+                                }
                                 hasFace = false;
                             }
 

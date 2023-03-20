@@ -32,8 +32,6 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity {
     public static Boolean initialized = false;  // 只执行一次的控制锁
 
-    private DetecteSeeta mDetecteSeeta = new DetecteSeeta();
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -117,6 +115,9 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
             return false;
         }
+
+        // 初始化jni
+        DetecteSeeta.initJni();
 
         // 加载本地人脸数据
         Common.resetLocalFaceImageList();

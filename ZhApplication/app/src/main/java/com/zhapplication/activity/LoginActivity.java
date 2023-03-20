@@ -200,8 +200,8 @@ public class LoginActivity extends AppCompatActivity {
             public void run() {
                 synchronized (lock) {
                     if (runClassifier) {
-                        Bitmap bitmap = textureView.getBitmap(300, 300);
-                        Bitmap croppedBitmap = Bitmap.createBitmap((int) 300, (int) 300, Bitmap.Config.ARGB_8888);
+                        Bitmap bitmap = textureView.getBitmap(Common.TF_OD_API_INPUT_SIZE, Common.TF_OD_API_INPUT_SIZE);
+                        Bitmap croppedBitmap = Bitmap.createBitmap((int) Common.TF_OD_API_INPUT_SIZE, (int) Common.TF_OD_API_INPUT_SIZE, Bitmap.Config.ARGB_8888);
                         if (bitmap!=null) {
                             int[] faceLoc = Pic.getFace(bitmap);
                             if (faceLoc!=null){
@@ -264,11 +264,9 @@ public class LoginActivity extends AppCompatActivity {
                 } else if (result.getTitle().equals("closeeyes")) {
                     paint.setColor(Color.RED);
                     paint1.setColor(Color.RED);
-
                 } else if (result.getTitle().equals("phone")) {
                     paint.setColor(0xFFFF9900);
                     paint1.setColor(0xFFFF9900);
-
                 } else if (result.getTitle().equals("smoke")) {
                     paint.setColor(Color.YELLOW);
                     paint1.setColor(Color.YELLOW);

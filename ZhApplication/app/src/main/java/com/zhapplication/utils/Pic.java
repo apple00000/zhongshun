@@ -15,6 +15,8 @@ import android.media.Image;
 import android.util.Log;
 import android.util.Size;
 
+import com.zhapplication.model.compare.DetecteSeeta;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -100,10 +102,14 @@ public class Pic {
             return null;
         }
 
+        if (!DetecteSeeta.isSeetaFace(bitmap)){
+            return null;
+        }
+
         float eyesDistance = 0f;
         PointF eyeMidPoint = new PointF();
         mFace[0].getMidPoint(eyeMidPoint);
-        eyesDistance = (float) (mFace[0].eyesDistance()*1.3);
+        eyesDistance = (float) (mFace[0].eyesDistance());
         res[0] = (int)(eyeMidPoint.x-eyesDistance);
         res[1] = (int)(eyeMidPoint.y-eyesDistance);
         res[2] = (int)(eyeMidPoint.x+eyesDistance);
@@ -113,7 +119,7 @@ public class Pic {
 
     // 矩形画
     public static Bitmap drawRect(int x1, int y1, int x2, int y2) {
-        Bitmap croppedBitmap = Bitmap.createBitmap((int) 300, (int) 300, Bitmap.Config.ARGB_8888);
+        Bitmap croppedBitmap = Bitmap.createBitmap((int) Common.TF_OD_API_INPUT_SIZE, (int) Common.TF_OD_API_INPUT_SIZE, Bitmap.Config.ARGB_8888);
         final Canvas canvas = new Canvas(croppedBitmap);
         Paint paint = new Paint();
         paint.setColor(Color.GREEN);
