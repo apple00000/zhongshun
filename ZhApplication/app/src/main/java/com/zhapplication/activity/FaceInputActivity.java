@@ -302,7 +302,7 @@ public class FaceInputActivity extends AppCompatActivity {
                                     }
                                     hasFace = false;
                                 }
-                                bitmap.recycle();
+//                                bitmap.recycle();
                             }else{
                                 faceNullCnt++;
                                 if (25==faceNullCnt){

@@ -203,28 +203,32 @@ public class LoginActivity extends AppCompatActivity {
                         Bitmap bitmap = textureView.getBitmap(Common.TF_OD_API_INPUT_SIZE, Common.TF_OD_API_INPUT_SIZE);
                         Bitmap croppedBitmap = Bitmap.createBitmap((int) Common.TF_OD_API_INPUT_SIZE, (int) Common.TF_OD_API_INPUT_SIZE, Bitmap.Config.ARGB_8888);
                         if (bitmap!=null) {
-                            int[] faceLoc = Pic.getFace(bitmap);
-                            if (faceLoc!=null){
-                                // 【认证】处理登录成功逻辑，目前默认成功
-                                if (signStatus==0) {
-                                    if (Common.verifyLoginFace(bitmap)) { // 默认成功
-                                        signStatus = 1;
-                                        imageView.setImageBitmap(croppedBitmap);
-                                        Toast.makeText(LoginActivity.this, "认证成功", Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-
-                                if (signStatus==0){
-                                    croppedBitmap = Pic.drawRect(faceLoc[0], faceLoc[1], faceLoc[2], faceLoc[3]);
-                                }else {
-                                    // 【检测】抽烟、电话、疲劳
-                                    croppedBitmap = classifyFrame(bitmap);
-                                }
-
-                                bitmap.recycle();
+                            if (1==signStatus) {
+                                // 【检测】抽烟、电话、疲劳
+                                croppedBitmap = classifyFrame(bitmap);
                             }else{
+                                int[] faceLoc = Pic.getFace(bitmap);
+                                if (faceLoc!=null){
+                                    // 【认证】处理登录成功逻辑，目前默认成功
+                                    if (0==signStatus) {
+                                        if (Common.verifyLoginFace(bitmap)) { // 默认成功
+                                            signStatus = 1;
+                                            imageView.setImageBitmap(croppedBitmap);
+                                            Toast.makeText(LoginActivity.this, "认证成功", Toast.LENGTH_SHORT).show();
+                                        }
+
+                                        croppedBitmap = Pic.drawRect(faceLoc[0], faceLoc[1], faceLoc[2], faceLoc[3]);
+                                    }else {
+
+                                    }
+
+                                    bitmap.recycle();
+                                }else{
+
+                                }
                             }
                         }else{
+
                         }
 
                         // 画图
@@ -255,6 +259,7 @@ public class LoginActivity extends AppCompatActivity {
 
         for (final Classifier.Recognition result : results) {
             final RectF location = result.getLocation();
+
             if (location != null && result.getConfidence() >= Common.MINIMUM_CONFIDENCE_TF_OD_API) {
                 Paint paint = new Paint();
                 Paint paint1 = new Paint();
@@ -265,6 +270,7 @@ public class LoginActivity extends AppCompatActivity {
                     paint.setColor(Color.RED);
                     paint1.setColor(Color.RED);
                 } else if (result.getTitle().equals("phone")) {
+                    Log.v("xxx3 phone","qqq");
                     paint.setColor(0xFFFF9900);
                     paint1.setColor(0xFFFF9900);
                 } else if (result.getTitle().equals("smoke")) {
@@ -278,7 +284,16 @@ public class LoginActivity extends AppCompatActivity {
                 paint.setAntiAlias(true);
                 paint1.setStyle(Paint.Style.FILL);
                 paint1.setAlpha(125);
-                canvas.drawRect(location, paint);
+
+                Log.v("xxx31", String.valueOf(textureView.getWidth()));
+                Log.v("xxx32",textureView.getWidth() * location.left / Common.TF_OD_API_INPUT_SIZE+" "+textureView.getWidth() * location.right / Common.TF_OD_API_INPUT_SIZE);
+                Log.v("xxx33",location.top+" "+location.bottom);
+
+//                canvas.drawRect(location, paint);
+                canvas.drawRect(location.left ,
+                         location.top,
+                         location.right,
+                         location.bottom, paint);
             }
         }
 

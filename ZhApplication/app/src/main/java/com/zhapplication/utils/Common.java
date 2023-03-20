@@ -33,7 +33,7 @@ public class Common {
     public static final String TF_OD_API_MODEL_FILE = "file:///android_asset/frozen_inference_graph_v6.pb";
     public static final String TF_OD_API_LABELS_FILE = "file:///android_asset/coco_labels_list.txt";
     public static final int TF_OD_API_INPUT_SIZE = 300;
-    public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.6f;
+    public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.4f;
     // 本地的bitmap人脸数据
     public static ArrayList<Bitmap> localFaceBitmapList = new ArrayList<>();
     // 目标检测分类器
