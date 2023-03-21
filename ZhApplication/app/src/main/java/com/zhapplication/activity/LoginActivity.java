@@ -200,12 +200,12 @@ public class LoginActivity extends AppCompatActivity {
             public void run() {
                 synchronized (lock) {
                     if (runClassifier) {
-                        Bitmap bitmap = textureView.getBitmap(Common.TF_OD_API_INPUT_SIZE, Common.TF_OD_API_INPUT_SIZE);
-                        Bitmap croppedBitmap = Bitmap.createBitmap((int) Common.TF_OD_API_INPUT_SIZE, (int) Common.TF_OD_API_INPUT_SIZE, Bitmap.Config.ARGB_8888);
+                        Bitmap bitmap = textureView.getBitmap(Common.TF_OD_API_INPUT_SIZE_WIDTH, Common.TF_OD_API_INPUT_SIZE_HEIGHT);
+                        Bitmap croppedBitmap = Bitmap.createBitmap((int) Common.TF_OD_API_INPUT_SIZE_WIDTH, (int) Common.TF_OD_API_INPUT_SIZE_HEIGHT, Bitmap.Config.ARGB_8888);
                         if (bitmap!=null) {
                             if (1==signStatus) {
                                 // 【检测】抽烟、电话、疲劳
-                                croppedBitmap = classifyFrame(bitmap);
+                                croppedBitmap = Pic.classifyFrame(bitmap, croppedBitmap);
                             }else{
                                 Pic.PicData faceLoc = Pic.getFace(bitmap);
                                 if (faceLoc!=null){
@@ -246,59 +246,7 @@ public class LoginActivity extends AppCompatActivity {
             }
         };
 
-    // 识别 抽烟电话疲劳
-    private Bitmap classifyFrame(Bitmap bitmap) {
-        if (Common.classifier == null ) {
-            return null;
-        }
 
-        final List<Classifier.Recognition> results = Common.classifier.recognizeImage(bitmap);
-
-        Bitmap croppedBitmap = Bitmap.createBitmap((int) Common.TF_OD_API_INPUT_SIZE, (int) Common.TF_OD_API_INPUT_SIZE, Bitmap.Config.ARGB_8888);
-        final Canvas canvas = new Canvas(croppedBitmap);
-
-        for (final Classifier.Recognition result : results) {
-            final RectF location = result.getLocation();
-
-            if (location != null && result.getConfidence() >= Common.MINIMUM_CONFIDENCE_TF_OD_API) {
-                Paint paint = new Paint();
-                Paint paint1 = new Paint();
-                if (result.getTitle().equals("openeyes")) {
-                    paint.setColor(Color.GREEN);
-                    paint1.setColor(Color.GREEN);
-                } else if (result.getTitle().equals("closeeyes")) {
-                    paint.setColor(Color.RED);
-                    paint1.setColor(Color.RED);
-                } else if (result.getTitle().equals("phone")) {
-                    Log.v("xxx3 phone","qqq");
-                    paint.setColor(0xFFFF9900);
-                    paint1.setColor(0xFFFF9900);
-                } else if (result.getTitle().equals("smoke")) {
-                    paint.setColor(Color.YELLOW);
-                    paint1.setColor(Color.YELLOW);
-                } else
-                    paint.setColor(Color.WHITE);
-
-                paint.setStyle(Paint.Style.STROKE);
-                paint.setStrokeWidth(5.0f);
-                paint.setAntiAlias(true);
-                paint1.setStyle(Paint.Style.FILL);
-                paint1.setAlpha(125);
-
-                Log.v("xxx31", String.valueOf(textureView.getWidth()));
-                Log.v("xxx32",textureView.getWidth() * location.left / Common.TF_OD_API_INPUT_SIZE+" "+textureView.getWidth() * location.right / Common.TF_OD_API_INPUT_SIZE);
-                Log.v("xxx33",location.top+" "+location.bottom);
-
-//                canvas.drawRect(location, paint);
-                canvas.drawRect(location.left ,
-                         location.top,
-                         location.right,
-                         location.bottom, paint);
-            }
-        }
-
-        return croppedBitmap;
-    }
 
     private void openCamera() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {

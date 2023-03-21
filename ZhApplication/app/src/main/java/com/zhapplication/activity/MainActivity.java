@@ -10,6 +10,7 @@ import android.annotation.SuppressLint;
 import android.app.XzjhSystemManager;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.media.Image;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
@@ -45,6 +46,14 @@ public class MainActivity extends AppCompatActivity {
         if (!initSuccess){
             finish();
         }
+
+//        ArrayList<String> file_list = fileUtil.getAllDataFileName(Common.FileFace,"jpg");
+//        for (int i =0;i<file_list.size();i++){
+//            Log.v("qqq3","qqq3"+ " "+i);
+//            Bitmap b = fileUtil.openImage(Common.FileFace + "/" + file_list.get(i));
+//            Bitmap croppedBitmap = Bitmap.createBitmap((int) Common.TF_OD_API_INPUT_SIZE, (int) Common.TF_OD_API_INPUT_SIZE, Bitmap.Config.ARGB_8888);
+//            Pic.classifyFrame(b, croppedBitmap);
+//        }
     }
 
     @Override
@@ -100,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
 
         // 初始化目标检测分类器
         try {
-            Common.classifier = TensorFlowObjectDetectionAPIModel.create(this.getAssets(), Common.TF_OD_API_MODEL_FILE, Common.TF_OD_API_LABELS_FILE, Common.TF_OD_API_INPUT_SIZE);
+            Common.classifier = TensorFlowObjectDetectionAPIModel.create(this.getAssets(), Common.TF_OD_API_MODEL_FILE, Common.TF_OD_API_LABELS_FILE, Common.TF_OD_API_INPUT_SIZE_HEIGHT);
         } catch (IOException e) {
             e.printStackTrace();
             return false;

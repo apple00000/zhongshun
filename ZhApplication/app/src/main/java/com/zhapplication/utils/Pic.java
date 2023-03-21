@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PointF;
+import android.graphics.RectF;
 import android.media.FaceDetector;
 import android.media.Image;
 import android.util.Log;
@@ -23,9 +24,11 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 import seetaface.CMSeetaFace;
 
+import com.zhapplication.model.detection.Classifier;
 import com.zhapplication.utils.Common;
 
 import org.json.JSONException;
@@ -116,7 +119,7 @@ public class Pic {
 
     // 矩形画
     public static Bitmap drawRect(int x1, int y1, int x2, int y2) {
-        Bitmap croppedBitmap = Bitmap.createBitmap((int) Common.TF_OD_API_INPUT_SIZE, (int) Common.TF_OD_API_INPUT_SIZE, Bitmap.Config.ARGB_8888);
+        Bitmap croppedBitmap = Bitmap.createBitmap((int) Common.TF_OD_API_INPUT_SIZE_HEIGHT, (int) Common.TF_OD_API_INPUT_SIZE_HEIGHT, Bitmap.Config.ARGB_8888);
         final Canvas canvas = new Canvas(croppedBitmap);
         Paint paint = new Paint();
         paint.setColor(Color.GREEN);
@@ -168,4 +171,81 @@ public class Pic {
         return Bitmap.createBitmap(bitmap, 0, 0, src_w, src_h, matrix,true);
     }
 
+    // 识别 抽烟电话疲劳
+    public static Bitmap classifyFrame(Bitmap bitmap, Bitmap croppedBitmap) {
+        if (Common.classifier == null ) {
+            return null;
+        }
+
+        final List<Classifier.Recognition> results = Common.classifier.recognizeImage(bitmap);
+
+        // 获取眼睛位置
+        float eyeBottom = 0;
+        for (final Classifier.Recognition result : results) {
+            final RectF location = result.getLocation();
+            if (result.getConfidence() >= 0.6f) {
+                if (result.getTitle().equals("openeyes") || result.getTitle().equals("closeeyes")) {
+                    eyeBottom = location.bottom;
+                    break;
+                }
+            }
+        }
+
+        final Canvas canvas = new Canvas(croppedBitmap);
+
+        for (final Classifier.Recognition result : results) {
+            final RectF location = result.getLocation();
+
+            if (result.getTitle().equals("smoke") && result.getConfidence() >= 0.05f ){
+                Log.v("qqq1", "smoke "+ result.getConfidence());
+                Paint paint = new Paint();
+                paint.setStyle(Paint.Style.STROKE);
+                paint.setStrokeWidth(5.0f);
+                paint.setAntiAlias(true);
+                paint.setColor(Color.YELLOW);
+                canvas.drawRect(location, paint);
+            }
+
+            if (result.getTitle().equals("phone") && result.getConfidence() >= 0.1f){
+                Log.v("qqq1", "phone "+ result.getConfidence());
+                Paint paint = new Paint();
+                paint.setStyle(Paint.Style.STROKE);
+                paint.setStrokeWidth(5.0f);
+                paint.setAntiAlias(true);
+                paint.setColor(Color.BLUE);
+                canvas.drawRect(location, paint);
+            }
+
+//            if (location != null && result.getConfidence() >= Common.MINIMUM_CONFIDENCE_TF_OD_API) {
+//                Paint paint = new Paint();
+//                paint.setStyle(Paint.Style.STROKE);
+//                paint.setStrokeWidth(5.0f);
+//                paint.setAntiAlias(true);
+//
+//                Log.v("qqq1 result", result.getTitle()+"  "+result.getConfidence());
+//
+////                Paint paint1 = new Paint();
+//                if (result.getTitle().equals("openeyes")) {
+////                    paint.setColor(Color.GREEN);
+////                    paint1.setColor(Color.GREEN);
+//                } else if (result.getTitle().equals("closeeyes")) {
+////                    paint.setColor(Color.RED);
+////                    paint1.setColor(Color.RED);
+//                } else if (result.getTitle().equals("phone")) {
+//                    paint.setColor(Color.BLUE);
+//                    canvas.drawRect(location, paint);
+////                    break;
+////                    paint1.setColor(0xFFFF9900);
+//                } else if (result.getTitle().equals("smoke")) {
+//                    paint.setColor(Color.YELLOW);
+//                    canvas.drawRect(location, paint);
+////                    paint1.setColor(Color.YELLOW);
+//                } else {
+////                    paint.setColor(Color.WHITE);
+//                }
+//            }
+
+        }
+        return croppedBitmap;
+    }
 }

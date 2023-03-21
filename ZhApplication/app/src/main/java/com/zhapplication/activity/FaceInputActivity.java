@@ -289,8 +289,8 @@ public class FaceInputActivity extends AppCompatActivity {
                 public void run() {
                     synchronized (lock) {
                         if (runClassifier) {
-                            Bitmap bitmap = textureView.getBitmap(Common.TF_OD_API_INPUT_SIZE, Common.TF_OD_API_INPUT_SIZE);
-                            Bitmap croppedBitmap = Bitmap.createBitmap((int) Common.TF_OD_API_INPUT_SIZE, (int) Common.TF_OD_API_INPUT_SIZE, Bitmap.Config.ARGB_8888);
+                            Bitmap bitmap = textureView.getBitmap(Common.TF_OD_API_INPUT_SIZE_WIDTH, Common.TF_OD_API_INPUT_SIZE_HEIGHT);
+                            Bitmap croppedBitmap = Bitmap.createBitmap((int) Common.TF_OD_API_INPUT_SIZE_WIDTH, (int) Common.TF_OD_API_INPUT_SIZE_HEIGHT, Bitmap.Config.ARGB_8888);
                             if (bitmap!=null) {
                                 Pic.PicData faceLoc = Pic.getFace(bitmap);
                                 if (faceLoc!=null){

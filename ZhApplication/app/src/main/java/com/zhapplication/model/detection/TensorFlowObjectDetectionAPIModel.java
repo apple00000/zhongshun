@@ -5,6 +5,7 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.RectF;
 import android.os.Trace;
+import android.util.Log;
 
 import org.tensorflow.Graph;
 import org.tensorflow.Operation;
@@ -72,7 +73,6 @@ public class TensorFlowObjectDetectionAPIModel implements Classifier {
             d.labels.add(line);
         }
         br.close();
-
 
         d.inferenceInterface = new TensorFlowInferenceInterface(assetManager, modelFilename);
 
@@ -171,14 +171,19 @@ public class TensorFlowObjectDetectionAPIModel implements Classifier {
 
         // Scale them back to the input size.
         for (int i = 0; i < outputScores.length; ++i) {
-            final RectF detection =
-                    new RectF(
+            String label = labels.get((int) outputClasses[i]);
+            Log.v("aaa","aaa  "+i+" "+ outputClasses[i]+" "+label+outputScores.toString());
+            if (label.equals("safety_belt")){
+                continue;
+            }
+
+            final RectF detection = new RectF(
                             outputLocations[4 * i + 1] * inputSize,
                             outputLocations[4 * i] * inputSize,
                             outputLocations[4 * i + 3] * inputSize,
                             outputLocations[4 * i + 2] * inputSize);
-            pq.add(
-                    new Recognition("" + i, labels.get((int) outputClasses[i]), outputScores[i], detection));
+
+            pq.add(new Recognition("" + i, label, outputScores[i], detection));
         }
 
         final ArrayList<Recognition> recognitions = new ArrayList<Recognition>();

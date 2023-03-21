@@ -131,6 +131,7 @@ public class fileUtil {
         }
     }
 
+    // 写文件
     public static void writeStrToFile(String filepath, String str) {
         File f=new File(filepath);
         if(!f.exists()) {
@@ -167,6 +168,7 @@ public class fileUtil {
         }
     }
 
+    // 读文件
     public static String readStrFromFile(String filepath) {
         String result = null;
         File f=new File(filepath);

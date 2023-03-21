@@ -34,8 +34,9 @@ public class Common {
     // 目标检测模型
     public static final String TF_OD_API_MODEL_FILE = "file:///android_asset/frozen_inference_graph_v6.pb";
     public static final String TF_OD_API_LABELS_FILE = "file:///android_asset/coco_labels_list.txt";
-    public static final int TF_OD_API_INPUT_SIZE = 500;
-    public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.4f;
+    public static final int TF_OD_API_INPUT_SIZE_WIDTH = 800;
+    public static final int TF_OD_API_INPUT_SIZE_HEIGHT = 800;
+    public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.07f;
     // 本地的bitmap人脸数据
     public static ArrayList<CMSeetaFace> localFaceCMSeetaFaceList = new ArrayList<>();
     // 目标检测分类器
@@ -55,7 +56,7 @@ public class Common {
         for (int i = 0; i < localFaceCMSeetaFaceList.size(); i++){
             CMSeetaFace localCM = localFaceCMSeetaFaceList.get(i);
             float y = DetecteSeeta.getSimilarityNum(localCM, cm);
-            Log.v("[verifyLoginFace]", i + "-" + String.valueOf(y));
+            Log.v("[verifyLoginFace]", i + " - " + y);
             if (y > FaceSimilarityValue){
                 return true;
             }
