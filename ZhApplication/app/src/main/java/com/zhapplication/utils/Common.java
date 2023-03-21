@@ -29,12 +29,12 @@ public class Common {
     public static String model2Path;
     public static String model3Path;
     // 人脸相似度临界值
-    public static final float FaceSimilarityValue = 0.8f;
+    public static final float FaceSimilarityValue = 0.75f;
 
     // 目标检测模型
     public static final String TF_OD_API_MODEL_FILE = "file:///android_asset/frozen_inference_graph_v6.pb";
     public static final String TF_OD_API_LABELS_FILE = "file:///android_asset/coco_labels_list.txt";
-    public static final int TF_OD_API_INPUT_SIZE = 300;
+    public static final int TF_OD_API_INPUT_SIZE = 500;
     public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.4f;
     // 本地的bitmap人脸数据
     public static ArrayList<CMSeetaFace> localFaceCMSeetaFaceList = new ArrayList<>();
@@ -51,19 +51,15 @@ public class Common {
     }
 
     // 验证人脸（通过本地人脸数据）
-    public static Boolean verifyLoginFace(Bitmap b) {
-        CMSeetaFace cm = DetecteSeeta.getSeetaFaceValue(b);
-        Log.v("verifyLoginFace","begin");
+    public static Boolean verifyLoginFace(CMSeetaFace cm) {
         for (int i = 0; i < localFaceCMSeetaFaceList.size(); i++){
             CMSeetaFace localCM = localFaceCMSeetaFaceList.get(i);
-            Log.v("verifyLoginFace","begin1");
             float y = DetecteSeeta.getSimilarityNum(localCM, cm);
             Log.v("[verifyLoginFace]", i + "-" + String.valueOf(y));
             if (y > FaceSimilarityValue){
                 return true;
             }
         }
-        Log.v("verifyLoginFace","end");
         return false;
     }
 
@@ -71,11 +67,15 @@ public class Common {
     public static void resetLocalFaceImageList(){
         ArrayList<CMSeetaFace> tmpFaceList = new ArrayList<>();
         // 加载本地人脸数据
-        ArrayList<String> file_list = fileUtil.getAllDataFileName(FileFace, "jpg");
+        ArrayList<String> file_list = fileUtil.getAllDataFileName(FileFace, "txt");
         for (int i = 0;i<file_list.size();i++){
-            Bitmap bm = fileUtil.openImage(FileFace + "/" +file_list.get(i));
-            Bitmap bm2 = Pic.imageScale(bm, TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE);
-            CMSeetaFace cm = DetecteSeeta.getSeetaFaceValue(bm2);
+            String fileName = file_list.get(i);
+            String f = fileUtil.readStrFromFile(Common.FileFace+"/"+fileName);
+            if (""==f){
+                Log.e("resetLocalFaceImageList", "f null"+" "+fileName);
+                continue;
+            }
+            CMSeetaFace cm = DetecteSeeta.String2CMSeetaFace(f);
             if (null!=cm) {
                 tmpFaceList.add(cm);
             }else{

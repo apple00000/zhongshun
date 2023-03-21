@@ -211,7 +211,7 @@ public class LoginActivity extends AppCompatActivity {
                                 if (faceLoc!=null){
                                     // 【认证】处理登录成功逻辑，目前默认成功
                                     if (0==signStatus) {
-                                        if (Common.verifyLoginFace(bitmap)) { // 默认成功
+                                        if (Common.verifyLoginFace(faceLoc.cm)) { // 默认成功
                                             signStatus = 1;
                                             imageView.setImageBitmap(croppedBitmap);
                                             Toast.makeText(LoginActivity.this, "认证成功", Toast.LENGTH_SHORT).show();

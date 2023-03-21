@@ -96,7 +96,7 @@ public class DetecteSeeta {
         CMSeetaFace cm = new CMSeetaFace();
         String[] ss = s.split(",");
         if (ss.length!=2065){
-            Log.v("String2CMSeetaFace","not 2065"+"   "+ss.length);
+            Log.v("String2CMSeetaFace","not 2065"+"   "+ss.length+" "+s);
             return null;
         }
         cm.left= Integer.parseInt(ss[0]);

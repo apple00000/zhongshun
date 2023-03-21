@@ -76,35 +76,6 @@ public class Pic {
         Log.v("SaveCM", raw);
     }
 
-    // 保存图片
-    public static void SaveImage(Image image) {
-        ByteBuffer byteBuffer = image.getPlanes()[0].getBuffer();
-        byte[] data = new byte[byteBuffer.remaining()];
-        byteBuffer.get(data);
-        File file = new File(Common.FileFace);
-        //判断当前的文件目录是否存在，如果不存在就创建这个文件目录
-        if (!file.exists()) {
-            file.mkdir();
-        }
-        String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-        String fileName = Common.FileFace + "/IMG_" + timeStamp + ".jpg";
-        FileOutputStream fileOutputStream = null;
-        try {
-            fileOutputStream = new FileOutputStream(fileName);
-            fileOutputStream.write(data, 0, data.length);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (fileOutputStream != null) {
-                try {
-                    fileOutputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
     // 检测是否有人脸，并返回人脸坐标
     public static PicData getFace(Bitmap bitmap) {
         PicData res = new PicData();

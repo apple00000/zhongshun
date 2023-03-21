@@ -45,6 +45,7 @@ import androidx.core.content.ContextCompat;
 import com.zhapplication.R;
 import android.view.Surface;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -53,6 +54,7 @@ import com.zhapplication.model.compare.DetecteSeeta;
 import com.zhapplication.utils.AutoFitTextureView;
 import com.zhapplication.utils.Common;
 import com.zhapplication.utils.Pic;
+import com.zhapplication.utils.fileUtil;
 
 import org.json.JSONException;
 
@@ -244,21 +246,15 @@ public class FaceInputActivity extends AppCompatActivity {
         imageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
             @Override
             public void onImageAvailable(ImageReader reader) {
+                String fileName = fileUtil.getFileName();
                 // 检测这个人是否已经存在于图片库中
-                Bitmap bitmap = textureView.getBitmap(Common.TF_OD_API_INPUT_SIZE, Common.TF_OD_API_INPUT_SIZE);
-                if (Common.verifyLoginFace(bitmap)){
+                if (Common.verifyLoginFace(faceLocSave.cm)){
                     Toast.makeText(FaceInputActivity.this, "人脸已经存在", Toast.LENGTH_SHORT).show();
                     backToMain();
                 }else{
-                    Pic.SaveImage(reader.acquireNextImage());
-
+                    fileUtil.SaveImage(reader.acquireNextImage(), fileName+".jpg");
                     String s1 = DetecteSeeta.CMSeetaFace2String(faceLocSave.cm);
-                    CMSeetaFace cm1 = DetecteSeeta.String2CMSeetaFace(s1);
-                    String s2 = DetecteSeeta.CMSeetaFace2String(cm1);
-                    if (s1.equals(s2)){
-                        Log.v("aaaaa","aaaaa");
-                    }
-
+                    fileUtil.writeStrToFile(fileName+".txt", s1);
                     Common.resetLocalFaceImageList();
 
                     //【录入成功】
