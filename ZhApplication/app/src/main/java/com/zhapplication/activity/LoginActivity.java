@@ -174,8 +174,8 @@ public class LoginActivity extends AppCompatActivity {
                     });
                 }
                 setUpImageReader();
-//                mCameraId = cameraId;
-                mCameraId = "109"; // 0后置 1前置 109板子
+                mCameraId = cameraId;
+//                mCameraId = "109"; // 0后置 1前置 109板子
                 break;
             }
         } catch (CameraAccessException e) {
@@ -211,7 +211,7 @@ public class LoginActivity extends AppCompatActivity {
                                 if (faceLoc!=null){
                                     // 【认证】处理登录成功逻辑，目前默认成功
                                     if (0==signStatus) {
-                                        if (Common.verifyLoginFace(faceLoc.cm)) { // 默认成功
+                                        if (Common.verifyLoginFace(faceLoc.cm)) {
                                             signStatus = 1;
                                             imageView.setImageBitmap(croppedBitmap);
                                             Toast.makeText(LoginActivity.this, "认证成功", Toast.LENGTH_SHORT).show();

@@ -29,7 +29,7 @@ public class Common {
     public static String model2Path;
     public static String model3Path;
     // 人脸相似度临界值
-    public static final float FaceSimilarityValue = 0.75f;
+    public static final float FaceSimilarityValue = 0.7f;
 
     // 目标检测模型
     public static final String TF_OD_API_MODEL_FILE = "file:///android_asset/frozen_inference_graph_v6.pb";

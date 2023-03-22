@@ -232,8 +232,8 @@ public class FaceInputActivity extends AppCompatActivity {
                     });
                 }
                 setUpImageReader();
-//                mCameraId = cameraId;
-                mCameraId = "109"; // 0后置 1前置 109板子
+                mCameraId = cameraId;
+//                mCameraId = "109"; // 0后置 1前置 109板子
                 break;
             }
         } catch (CameraAccessException e) {
@@ -295,6 +295,13 @@ public class FaceInputActivity extends AppCompatActivity {
                                 Pic.PicData faceLoc = Pic.getFace(bitmap);
                                 if (faceLoc!=null){
                                     faceLocSave = faceLoc;
+
+                                    // 预检测是否存在
+                                    if (Common.verifyLoginFace(faceLoc.cm)){
+                                        Toast.makeText(FaceInputActivity.this, "人脸已经存在", Toast.LENGTH_SHORT).show();
+                                        backToMain();
+                                    }
+
                                     croppedBitmap = Pic.drawRect(
                                             faceLoc.rect[0],
                                             faceLoc.rect[1],
