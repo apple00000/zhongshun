@@ -46,10 +46,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".activity.FaceInputActivity"
             android:exported="false"
             android:label="人脸录入" />
+
         <activity
             android:name=".activity.LoginActivity"
             android:exported="false"

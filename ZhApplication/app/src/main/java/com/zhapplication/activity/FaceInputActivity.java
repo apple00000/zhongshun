@@ -91,6 +91,7 @@ public class FaceInputActivity extends AppCompatActivity {
 
     private Pic.PicData faceLocSave = null;   // 人脸特征临时缓存
     private int faceNullCnt = 0;              // 清空人脸特征的计数
+    private int successSign = 0;              // 识别成功的标记
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,8 +101,9 @@ public class FaceInputActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         setContentView(R.layout.activity_face_input);
-        textureView =  (AutoFitTextureView) findViewById(R.id.textureView_faceInput);
+        textureView = (AutoFitTextureView) findViewById(R.id.textureView_faceInput);
         imageView = (ImageView) findViewById(R.id.imageView_faceInput);
+
         btn_photo = findViewById(R.id.btn_photo);
         btn_photo.setOnClickListener(OnClick);
     }
@@ -120,6 +122,10 @@ public class FaceInputActivity extends AppCompatActivity {
     private final View.OnClickListener OnClick = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
+            if (1==successSign) {
+                return;
+            }
+
             // 点击拍照按钮时，需要有人脸才可以
             if (null == faceLocSave){
                 Toast.makeText(FaceInputActivity.this, "请对准正脸", Toast.LENGTH_SHORT).show();
@@ -252,6 +258,9 @@ public class FaceInputActivity extends AppCompatActivity {
                     Toast.makeText(FaceInputActivity.this, "人脸已经存在", Toast.LENGTH_SHORT).show();
                     backToMain();
                 }else{
+                    // 成功逻辑
+                    successSign = 1;
+
                     fileUtil.SaveImage(reader.acquireNextImage(), fileName+".jpg");
                     String s1 = DetecteSeeta.CMSeetaFace2String(faceLocSave.cm);
                     fileUtil.writeStrToFile(fileName+".txt", s1);
@@ -288,7 +297,7 @@ public class FaceInputActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     synchronized (lock) {
-                        if (runClassifier) {
+                        if (runClassifier && 0 == successSign) {
                             Bitmap bitmap = textureView.getBitmap(Common.TF_OD_API_INPUT_SIZE_WIDTH, Common.TF_OD_API_INPUT_SIZE_HEIGHT);
                             Bitmap croppedBitmap = Bitmap.createBitmap((int) Common.TF_OD_API_INPUT_SIZE_WIDTH, (int) Common.TF_OD_API_INPUT_SIZE_HEIGHT, Bitmap.Config.ARGB_8888);
                             if (bitmap!=null) {

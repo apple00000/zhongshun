@@ -12,6 +12,14 @@
         android:layout_height="match_parent" />
 
     <ImageView
+        android:id="@+id/man"
+        android:layout_width="800dp"
+        android:layout_height="1200dp"
+        android:alpha="0.5"
+        android:layout_marginTop="100dp"
+        android:src="@drawable/man" />
+
+    <ImageView
         android:id="@+id/imageView_faceInput"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

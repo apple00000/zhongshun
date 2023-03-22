@@ -180,23 +180,37 @@ public class Pic {
         final List<Classifier.Recognition> results = Common.classifier.recognizeImage(bitmap);
 
         // 获取眼睛位置
-        float eyeBottom = 0;
+        float maxOpenEyes = 0;
         for (final Classifier.Recognition result : results) {
             final RectF location = result.getLocation();
-            if (result.getConfidence() >= 0.6f) {
-                if (result.getTitle().equals("openeyes") || result.getTitle().equals("closeeyes")) {
-                    eyeBottom = location.bottom;
+            if (result.getConfidence() >= 0.9f) {
+                if (result.getTitle().equals("openeyes")) {
+                    maxOpenEyes = result.getConfidence();
                     break;
                 }
             }
         }
+
+        Boolean has_smoke = false;
+        Boolean has_phone = false;
 
         final Canvas canvas = new Canvas(croppedBitmap);
 
         for (final Classifier.Recognition result : results) {
             final RectF location = result.getLocation();
 
-            if (result.getTitle().equals("smoke") && result.getConfidence() >= 0.05f ){
+            if (result.getTitle().equals("closeeyes") && result.getConfidence() >= 0.95f && result.getConfidence()>maxOpenEyes+0.03){
+                Log.v("qqq1", "closeeyes "+ result.getConfidence());
+                Paint paint = new Paint();
+                paint.setStyle(Paint.Style.STROKE);
+                paint.setStrokeWidth(5.0f);
+                paint.setAntiAlias(true);
+                paint.setColor(Color.RED);
+                canvas.drawRect(location, paint);
+            }
+
+            if (result.getTitle().equals("smoke") && result.getConfidence() >= 0.1f && (!has_smoke)){
+                has_smoke = true;
                 Log.v("qqq1", "smoke "+ result.getConfidence());
                 Paint paint = new Paint();
                 paint.setStyle(Paint.Style.STROKE);
@@ -206,7 +220,8 @@ public class Pic {
                 canvas.drawRect(location, paint);
             }
 
-            if (result.getTitle().equals("phone") && result.getConfidence() >= 0.1f){
+            if (result.getTitle().equals("phone") && result.getConfidence() >= 0.15f && (!has_phone)){
+                has_phone = true;
                 Log.v("qqq1", "phone "+ result.getConfidence());
                 Paint paint = new Paint();
                 paint.setStyle(Paint.Style.STROKE);
@@ -215,37 +230,8 @@ public class Pic {
                 paint.setColor(Color.BLUE);
                 canvas.drawRect(location, paint);
             }
-
-//            if (location != null && result.getConfidence() >= Common.MINIMUM_CONFIDENCE_TF_OD_API) {
-//                Paint paint = new Paint();
-//                paint.setStyle(Paint.Style.STROKE);
-//                paint.setStrokeWidth(5.0f);
-//                paint.setAntiAlias(true);
-//
-//                Log.v("qqq1 result", result.getTitle()+"  "+result.getConfidence());
-//
-////                Paint paint1 = new Paint();
-//                if (result.getTitle().equals("openeyes")) {
-////                    paint.setColor(Color.GREEN);
-////                    paint1.setColor(Color.GREEN);
-//                } else if (result.getTitle().equals("closeeyes")) {
-////                    paint.setColor(Color.RED);
-////                    paint1.setColor(Color.RED);
-//                } else if (result.getTitle().equals("phone")) {
-//                    paint.setColor(Color.BLUE);
-//                    canvas.drawRect(location, paint);
-////                    break;
-////                    paint1.setColor(0xFFFF9900);
-//                } else if (result.getTitle().equals("smoke")) {
-//                    paint.setColor(Color.YELLOW);
-//                    canvas.drawRect(location, paint);
-////                    paint1.setColor(Color.YELLOW);
-//                } else {
-////                    paint.setColor(Color.WHITE);
-//                }
-//            }
-
         }
+
         return croppedBitmap;
     }
 }
