@@ -220,7 +220,7 @@ public class Pic {
                 canvas.drawRect(location, paint);
             }
 
-            if (result.getTitle().equals("phone") && result.getConfidence() >= 0.15f && (!has_phone)){
+            if (result.getTitle().equals("phone") && result.getConfidence() >= 0.06f && (!has_phone)){
                 has_phone = true;
                 Log.v("qqq1", "phone "+ result.getConfidence());
                 Paint paint = new Paint();
