@@ -209,7 +209,7 @@ public class Pic {
                 canvas.drawRect(location, paint);
             }
 
-            if (result.getTitle().equals("smoke") && result.getConfidence() >= 0.1f && (!has_smoke)){
+            if (result.getTitle().equals("smoke") && result.getConfidence() >= 0.05f && (!has_smoke)){
                 has_smoke = true;
                 Log.v("qqq1", "smoke "+ result.getConfidence());
                 Paint paint = new Paint();

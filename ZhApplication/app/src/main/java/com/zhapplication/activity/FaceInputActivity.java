@@ -307,6 +307,7 @@ public class FaceInputActivity extends AppCompatActivity {
 
                                     // 预检测是否存在
                                     if (Common.verifyLoginFace(faceLoc.cm)){
+                                        successSign = 1;
                                         Toast.makeText(FaceInputActivity.this, "人脸已经存在", Toast.LENGTH_SHORT).show();
                                         backToMain();
                                     }
