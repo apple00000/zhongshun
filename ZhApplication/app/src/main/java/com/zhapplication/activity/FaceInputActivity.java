@@ -152,8 +152,6 @@ public class FaceInputActivity extends AppCompatActivity {
             } catch (CameraAccessException e) {
                 e.printStackTrace();
             }
-            //获取图像的缓冲区
-            //获取文件的存储权限及操作
         }
     };
 

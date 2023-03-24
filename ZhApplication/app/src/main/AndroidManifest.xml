@@ -7,7 +7,6 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:allowBackup="true"
@@ -19,22 +18,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ZhApplication"
         tools:targetApi="31">
-
-        <receiver
-            android:name=".activity.StartReceiver"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MEDIA_MOUNTED"/>
-                <action android:name="android.intent.action.MEDIA_UNMOUNTED"/>
-                <action android:name="android.intent.action.MEDIA_EJECT"/>
-                <action android:name="android.intent.action.MEDIA_REMOVED"/>
-                <data android:scheme="file" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
-            </intent-filter>
-        </receiver>
 
         <activity
             android:name=".activity.MainActivity"
