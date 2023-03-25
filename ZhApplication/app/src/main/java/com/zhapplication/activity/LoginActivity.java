@@ -54,29 +54,7 @@ import com.zhapplication.utils.fileUtil;
 import com.zhapplication.model.compare.DetecteSeeta;
 
 public class LoginActivity extends AppCompatActivity {
-    private AutoFitTextureView textureView;
-    private ImageView imageView;
-    private HandlerThread handlerThread;
-    private Handler mCameraHandler;
-    private CameraManager cameraManager;
-    //最佳的预览尺寸
-    private Size previewSize;
-    //最佳的拍照尺寸
-    private Size mCaptureSize;
-    private String mCameraId;
-    private CameraDevice cameraDevice;
-    private CaptureRequest.Builder captureRequestBuilder;
-    private CaptureRequest captureRequest;
-    private CameraCaptureSession mCameraCaptureSession;
-    private Button btn_photo;
-    private ImageReader imageReader;
-    private static final SparseArray ORIENTATION = new SparseArray();
-    static {
-        ORIENTATION.append(Surface.ROTATION_0, 0);
-        ORIENTATION.append(Surface.ROTATION_90, 90);
-        ORIENTATION.append(Surface.ROTATION_180, 180);
-        ORIENTATION.append(Surface.ROTATION_270, 270);
-    }
+    private CameraBase camera1 = new CameraBase();
 
     private boolean runClassifier = false;
     private final Object lock = new Object();
@@ -90,8 +68,9 @@ public class LoginActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         setContentView(R.layout.activity_login);
-        textureView =  (AutoFitTextureView) findViewById(R.id.textureView_login);
-        imageView = (ImageView) findViewById(R.id.imageView_login);
+        camera1.textureView =  (AutoFitTextureView) findViewById(R.id.textureView_login);
+        camera1.imageView = (ImageView) findViewById(R.id.imageView_login);
+        camera1.mCameraId = "109";
     }
 
     @Override
@@ -109,18 +88,18 @@ public class LoginActivity extends AppCompatActivity {
         super.onResume();
 
         startCameraThread();
-        if (!textureView.isAvailable()) {
-            textureView.setSurfaceTextureListener(mTextureListener);
-            imageView.getLayoutParams().width = textureView.getWidth();
-            imageView.getLayoutParams().height = textureView.getHeight();
+        if (!camera1.textureView.isAvailable()) {
+            camera1.textureView.setSurfaceTextureListener(mTextureListener);
+            camera1.imageView.getLayoutParams().width = camera1.textureView.getWidth();
+            camera1.imageView.getLayoutParams().height = camera1.textureView.getHeight();
         } else {
-            startPreview();
+            startPreview(camera1);
         }
     }
 
     @Override
     public void onPause() {
-        closeCamera();
+        closeCamera(camera1);
         stopBackgroundThread();
         super.onPause();
     }
@@ -130,9 +109,9 @@ public class LoginActivity extends AppCompatActivity {
         public void onSurfaceTextureAvailable(@NonNull SurfaceTexture surface, int width, int height) {
             //SurfaceTexture组件可用的时候,设置相机参数，并打开摄像头
             //设置摄像头参数
-            setUpCamera(width, height);
+            setUpCamera(width, height, camera1);
             //打开摄像头
-            openCamera();
+            openCamera(camera1);
         }
 
         @Override
@@ -152,45 +131,42 @@ public class LoginActivity extends AppCompatActivity {
         }
     };
 
-    private void setUpCamera(int width, int height) {
-        cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+    private Boolean setUpCamera(int width, int height, CameraBase mCamera) {
+        mCamera.cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
         //拿到摄像头的id
         try {
-            for (String cameraId : cameraManager.getCameraIdList()) {
-                //得到摄像头的参数
-                CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId);
-                Integer facing = cameraCharacteristics.get(CameraCharacteristics.LENS_FACING);
-                if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
-                    continue;
-                }
-                StreamConfigurationMap map = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-                if (map != null) { //找到摄像头能够输出的，最符合我们当前屏幕能显示的最小分辨率
-                    previewSize = Pic.getOptimalSize(map.getOutputSizes(SurfaceTexture.class), width, height);
-                    mCaptureSize = Collections.max(Arrays.asList(map.getOutputSizes(ImageFormat.JPEG)), new Comparator<Size>() {
-                        @Override
-                        public int compare(Size o1, Size o2) {
-                            return Long.signum(o1.getWidth() * o1.getHeight() - o2.getWidth() * o2.getHeight());
-                        }
-                    });
-                }
-                setUpImageReader();
-                mCameraId = cameraId;
-//                mCameraId = "109"; // 0后置 1前置 109板子
-                break;
+            //得到摄像头的参数
+            CameraCharacteristics cameraCharacteristics = mCamera.cameraManager.getCameraCharacteristics(mCamera.mCameraId);
+            Integer facing = cameraCharacteristics.get(CameraCharacteristics.LENS_FACING);
+            if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
+                return false;
             }
+            StreamConfigurationMap map = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+            if (map != null) { //找到摄像头能够输出的，最符合我们当前屏幕能显示的最小分辨率
+                mCamera.previewSize = Pic.getOptimalSize(map.getOutputSizes(SurfaceTexture.class), width, height);
+                mCamera.mCaptureSize = Collections.max(Arrays.asList(map.getOutputSizes(ImageFormat.JPEG)), new Comparator<Size>() {
+                    @Override
+                    public int compare(Size o1, Size o2) {
+                        return Long.signum(o1.getWidth() * o1.getHeight() - o2.getWidth() * o2.getHeight());
+                    }
+                });
+            }
+            setUpImageReader(mCamera);
         } catch (CameraAccessException e) {
             e.printStackTrace();
+            return false;
         }
+
+        return true;
     }
 
-    private void setUpImageReader() {
-        imageReader = ImageReader.newInstance(mCaptureSize.getWidth(), mCaptureSize.getHeight(), ImageFormat.JPEG, 2);
-        imageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
+    private void setUpImageReader(CameraBase mCamera) {
+        mCamera.imageReader = ImageReader.newInstance(mCamera.mCaptureSize.getWidth(), mCamera.mCaptureSize.getHeight(), ImageFormat.JPEG, 2);
+        mCamera.imageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
             @Override
             public void onImageAvailable(ImageReader reader) {
             }
-
-        }, mCameraHandler);
+        }, mCamera.mCameraHandler);
     }
 
     // 人脸检测
@@ -200,7 +176,7 @@ public class LoginActivity extends AppCompatActivity {
             public void run() {
                 synchronized (lock) {
                     if (runClassifier) {
-                        Bitmap bitmap = textureView.getBitmap(Common.TF_OD_API_INPUT_SIZE_WIDTH, Common.TF_OD_API_INPUT_SIZE_HEIGHT);
+                        Bitmap bitmap = camera1.textureView.getBitmap(Common.TF_OD_API_INPUT_SIZE_WIDTH, Common.TF_OD_API_INPUT_SIZE_HEIGHT);
                         Bitmap croppedBitmap = Bitmap.createBitmap((int) Common.TF_OD_API_INPUT_SIZE_WIDTH, (int) Common.TF_OD_API_INPUT_SIZE_HEIGHT, Bitmap.Config.ARGB_8888);
                         if (bitmap!=null) {
                             if (1==signStatus) {
@@ -213,7 +189,7 @@ public class LoginActivity extends AppCompatActivity {
                                     if (0==signStatus) {
                                         if (Common.verifyLoginFace(faceLoc.cm)) {
                                             signStatus = 1;
-                                            imageView.setImageBitmap(croppedBitmap);
+                                            camera1.imageView.setImageBitmap(croppedBitmap);
                                             Toast.makeText(LoginActivity.this, "认证成功", Toast.LENGTH_SHORT).show();
                                         }
 
@@ -233,90 +209,90 @@ public class LoginActivity extends AppCompatActivity {
 
                         // 画图
                         Bitmap finalCroppedBitmap = croppedBitmap;
-                        imageView.post(new Runnable() {
+                        camera1.imageView.post(new Runnable() {
                             @Override
                             public void run() {
-                                imageView.setImageBitmap(finalCroppedBitmap);
+                                camera1.imageView.setImageBitmap(finalCroppedBitmap);
                             }
                         });
                     }
                 }
 
-                mCameraHandler.post(periodicClassify);
+                camera1.mCameraHandler.post(periodicClassify);
             }
         };
 
 
-
-    private void openCamera() {
+    private void openCamera(CameraBase mCamera) {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
             return;
         }
         try {
-            cameraManager.openCamera(mCameraId, mStateCallback, mCameraHandler);
+            mCamera.cameraManager.openCamera(mCamera.mCameraId, mStateCallback_1, mCamera.mCameraHandler);
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
 
-        imageView.getLayoutParams().width = textureView.getWidth();
-        imageView.getLayoutParams().height = textureView.getHeight();
+        mCamera.imageView.getLayoutParams().width = mCamera.textureView.getWidth();
+        mCamera.imageView.getLayoutParams().height = mCamera.textureView.getHeight();
     }
 
-    private void closeCamera() {
-        if (null != mCameraCaptureSession) {
-            mCameraCaptureSession.close();
-            mCameraCaptureSession = null;
+    private void closeCamera(CameraBase mCamera) {
+        if (null != mCamera.mCameraCaptureSession) {
+            mCamera.mCameraCaptureSession.close();
+            mCamera.mCameraCaptureSession = null;
         }
-        if (null != cameraDevice) {
-            cameraDevice.close();
-            cameraDevice = null;
+        if (null != mCamera.cameraDevice) {
+            mCamera.cameraDevice.close();
+            mCamera.cameraDevice = null;
         }
-        if (null != imageReader) {
-            imageReader.close();
-            imageReader = null;
+        if (null != mCamera.imageReader) {
+            mCamera.imageReader.close();
+            mCamera.imageReader = null;
         }
     }
 
-    CameraDevice.StateCallback mStateCallback = new CameraDevice.StateCallback() {
+    // 主摄像头
+    CameraDevice.StateCallback mStateCallback_1 = new CameraDevice.StateCallback() {
         @Override
         public void onOpened(@NonNull CameraDevice camera) { //摄像头打开
-            cameraDevice = camera;
-            startPreview();
+            camera1.cameraDevice = camera;
+            startPreview(camera1);
         }
 
         @Override
         public void onDisconnected(@NonNull CameraDevice camera) { //摄像头关闭
-            cameraDevice.close();
-            cameraDevice = null;
+            camera1.cameraDevice.close();
+            camera1.cameraDevice = null;
         }
 
         @Override
         public void onError(@NonNull CameraDevice camera, int error) {//摄像头出现错误
-            cameraDevice.close();
-            cameraDevice = null;
+            camera1.cameraDevice.close();
+            camera1.cameraDevice = null;
         }
     };
 
     // 预览
-    private void startPreview() {
+    private void startPreview(CameraBase mCamera) {
         //建立图像缓冲区
-        SurfaceTexture surfaceTexture = textureView.getSurfaceTexture();
-        surfaceTexture.setDefaultBufferSize(previewSize.getWidth(), previewSize.getHeight());
+        SurfaceTexture surfaceTexture = mCamera.textureView.getSurfaceTexture();
+        surfaceTexture.setDefaultBufferSize(mCamera.previewSize.getWidth(), mCamera.previewSize.getHeight());
 
         //得到界面的显示对象
         Surface surface = new Surface(surfaceTexture);
         try {
-            captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-            captureRequestBuilder.addTarget(surface);
+            mCamera.captureRequestBuilder = mCamera.cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+            mCamera.captureRequestBuilder.addTarget(surface);
             //建立通道(CaptureRequest和CaptureSession会话)
-            cameraDevice.createCaptureSession(Arrays.asList(surface, imageReader.getSurface()), new CameraCaptureSession.StateCallback() {
+            mCamera.cameraDevice.createCaptureSession(Arrays.asList(surface, mCamera.imageReader.getSurface()), new CameraCaptureSession.StateCallback() {
                 @Override
                 public void onConfigured(@NonNull CameraCaptureSession session) {
-                    captureRequest = captureRequestBuilder.build();
-                    mCameraCaptureSession = session;
+                    mCamera.captureRequest = mCamera.captureRequestBuilder.build();
+                    mCamera.mCameraCaptureSession = session;
                     try {
-                        mCameraCaptureSession.setRepeatingRequest(captureRequest, null, mCameraHandler);
+                        mCamera.mCameraCaptureSession.setRepeatingRequest(mCamera.captureRequest, null, mCamera.mCameraHandler);
                     } catch (CameraAccessException e) {
                         e.printStackTrace();
                     }
@@ -326,7 +302,7 @@ public class LoginActivity extends AppCompatActivity {
                 public void onConfigureFailed(@NonNull CameraCaptureSession session) {
 
                 }
-            }, mCameraHandler);
+            }, mCamera.mCameraHandler);
 
         } catch (CameraAccessException e) {
             e.printStackTrace();
@@ -335,22 +311,22 @@ public class LoginActivity extends AppCompatActivity {
 
     //开启摄像头线程
     private void startCameraThread() {
-        handlerThread = new HandlerThread("myHandlerThread");
-        handlerThread.start();
-        mCameraHandler = new Handler(handlerThread.getLooper());
+        camera1.handlerThread = new HandlerThread("myHandlerThread");
+        camera1.handlerThread.start();
+        camera1.mCameraHandler = new Handler(camera1.handlerThread.getLooper());
         synchronized (lock) {
             runClassifier = true;
         }
-        mCameraHandler.post(periodicClassify);
+        camera1.mCameraHandler.post(periodicClassify);
     }
 
     // 停止后台线程
     private void stopBackgroundThread() {
-        handlerThread.quitSafely();
+        camera1.handlerThread.quitSafely();
         try {
-            handlerThread.join();
-            handlerThread = null;
-            mCameraHandler = null;
+            camera1.handlerThread.join();
+            camera1.handlerThread = null;
+            camera1.mCameraHandler = null;
             synchronized (lock) {
                 runClassifier = false;
             }
